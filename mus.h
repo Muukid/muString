@@ -150,12 +150,17 @@ mustring mus_string_insert(mustring str, char* insert, size_m i) {
 }
 
 mustring mus_string_replace(mustring str, char* find, char* replace, size_m beg, size_m end) {
+	size_m find_len = mus_strlen(find);
+	size_m replace_len = mus_strlen(replace);
+	size_m len_dif = find_len - replace_len;
+	if (replace_len > find_len) len_dif = replace_len - find_len;
 	for (size_m i = beg; i < end + 1 && i < mus_strlen(str.s); i++) {
 		if (mus_here(str.s, find, i) == MUS_TRUE) {
 			str = mus_string_delete(str, i, i + mus_strlen(find));
 			if (mus_strlen(replace) > 0) {
 				str = mus_string_insert(str, replace, i);
 			}
+			end -= len_dif;
 		}
 	}
 	return str;
