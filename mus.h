@@ -19,27 +19,30 @@ More explicit license information at the end of file.
 #endif
 
 #ifndef MUSDEF
-	#ifdef MUS_STATIC
-		#define MUSDEF static
-	#else
-		#define MUSDEF extern
-	#endif
+    #ifdef MUS_STATIC
+        #define MUSDEF static
+    #else
+        #define MUSDEF extern
+    #endif
 #endif
 
 #ifndef size_m
-	#ifndef _SIZE_T_
-		#include <stddef.h>
-	#endif
-	#define size_m size_t
+    #ifndef _SIZE_T_
+        #include <stddef.h>
+    #endif
+    #define size_m size_t
 #endif
 
 typedef enum { MUS_FALSE, MUS_TRUE } MUS_BOOL;
 typedef struct {
-	char* s;
-	size_m size;
+    char* s;
+    size_m size;
+    size_m len;
 } mustring;
 
 MUSDEF size_m mus_strlen(char* s);
+
+MUSDEF size_m mus_string_strlen(mustring s);
 
 MUSDEF mustring mus_string_create(char* s);
 
@@ -72,98 +75,114 @@ MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size
 #endif
 
 #ifndef _STDLIB_H
-	#include <stdlib.h>
+    #include <stdlib.h>
 #endif
 #define mus_malloc malloc
 #define mus_free free
 #define mus_realloc realloc
 
 #ifndef _STRING_H
-	#include <string.h>
+    #include <string.h>
 #endif
 
 size_m mus_strlen(char* s) {
-	return strlen(s);
+    return strlen(s);
+}
+size_m mus_string_strlen(mustring s) {
+    return s.len;
 }
 
 mustring mus_string_create(char* s) {
-	mustring str;
-	str.size = (sizeof(char) * (mus_strlen(s))) * 2;
-	str.s = mus_malloc(str.size);
-	for (size_m i = 0; i < mus_strlen(s); i++) {
-		str.s[i] = s[i];
-	}
-	str.s[mus_strlen(s)] = '\0';
-	return str;
+    mustring str;
+    str.len = mus_strlen(s);
+    str.size = (sizeof(char) * (str.len)) * 2;
+    str.s = mus_malloc(str.size);
+    for (size_m i = 0; i < str.len; i++) {
+        str.s[i] = s[i];
+    }
+    str.s[str.len] = '\0';
+    return str;
 }
 
 void mus_string_destroy(mustring str) {
-	mus_free(str.s);
+    mus_free(str.s);
 }
 
 mustring mus_string_size_check(mustring str, size_m size) {
-	MUS_BOOL resized = MUS_FALSE;
-	while (str.size < size) {
-		str.size *= 2;
-		resized = MUS_TRUE;
-	}
-	if (resized == MUS_TRUE) {
-		str.s = mus_realloc(str.s, str.size);
-	}
-	return str;
+    MUS_BOOL resized = MUS_FALSE;
+    while (str.size < size) {
+        str.size *= 2;
+        resized = MUS_TRUE;
+    }
+    if (resized == MUS_TRUE) {
+        str.s = mus_realloc(str.s, str.size);
+    }
+    return str;
 }
 
 MUS_BOOL mus_here(char* str, char* check, size_m i) {
-	for (size_m j = 0; j < mus_strlen(check); j++) {
-		if (i+j >= mus_strlen(str) || str[i+j] != check[j]) {
-			return MUS_FALSE;
-		}
-	}
-	return MUS_TRUE;
+    if (str[i] != check[0]) return MUS_FALSE;
+    size_m check_len = mus_strlen(check);
+    size_m str_len = mus_strlen(str);
+    for (size_m j = 0; j < check_len; j++) {
+        if (i+j >= str_len || str[i+j] != check[j]) {
+            return MUS_FALSE;
+        }
+    }
+    return MUS_TRUE;
 }
 
 MUS_BOOL mus_has(char* str, char* find, size_m beg, size_m end) {
-	for (size_m i = beg; i + mus_strlen(find) < end; i++) {
-		if (mus_here(str, find, i) == MUS_TRUE) {
-			return MUS_TRUE;
-		}
-	}
-	return MUS_FALSE;
+    size_m find_len = mus_strlen(find);
+    for (size_m i = beg; i + find_len < end; i++) {
+        /*if (mus_here(str, find, i) == MUS_TRUE) {
+            return MUS_TRUE;
+        }*/
+        for (size_m j = 0; j < find_len; j++) {
+            if (str[i+j] != find[j]) continue;
+        }
+        return MUS_TRUE;
+    }
+    return MUS_FALSE;
 }
 
 mustring mus_string_delete(mustring str, size_m beg, size_m end) {
-	for (size_m i = end; i < mus_strlen(str.s) + 1; i++) {
-		str.s[i-(end-beg)] = str.s[i];
-	}
-	return str;
+    for (size_m i = end; i < mus_string_strlen(str) + 1; i++) {
+        str.s[i-(end-beg)] = str.s[i];
+    }
+    str.len -= (end - beg);
+    return str;
 }
 
 mustring mus_string_insert(mustring str, char* insert, size_m i) {
-	str = mus_string_size_check(str, sizeof(char) * (mus_strlen(str.s) + mus_strlen(insert) + 1));
-	for (size_m j = mus_strlen(str.s); i < j+1; j--) {
-		str.s[j+mus_strlen(insert)] = str.s[j];
-	}
-	for (size_m j = 0; j < mus_strlen(insert); j++) {
-		str.s[i+j] = insert[j];
-	}
-	return str;
+    size_m insert_len = mus_strlen(insert);
+    str = mus_string_size_check(str, sizeof(char) * (mus_string_strlen(str) + insert_len + 1));
+    for (size_m j = mus_string_strlen(str); i < j+1; j--) {
+        str.s[j+insert_len] = str.s[j];
+    }
+    for (size_m j = 0; j < insert_len; j++) {
+        str.s[i+j] = insert[j];
+    }
+    str.len += insert_len;
+    return str;
 }
 
 mustring mus_string_replace(mustring str, char* find, char* replace, size_m beg, size_m end) {
-	size_m find_len = mus_strlen(find);
-	size_m replace_len = mus_strlen(replace);
-	size_m len_dif = find_len - replace_len;
-	if (replace_len > find_len) len_dif = replace_len - find_len;
-	for (size_m i = beg; i < end + 1 && i < mus_strlen(str.s); i++) {
-		if (mus_here(str.s, find, i) == MUS_TRUE) {
-			str = mus_string_delete(str, i, i + mus_strlen(find));
-			if (mus_strlen(replace) > 0) {
-				str = mus_string_insert(str, replace, i);
-			}
-			end -= len_dif;
-		}
-	}
-	return str;
+    size_m find_len = mus_strlen(find);
+    size_m replace_len = mus_strlen(replace);
+    size_m len_dif = find_len - replace_len;
+    if (replace_len > find_len) len_dif = replace_len - find_len;
+    for (size_m i = beg; i < end + 1 && i < mus_string_strlen(str); i++) {
+        if (mus_here(str.s, find, i) == MUS_TRUE) {
+            str = mus_string_delete(str, i, i + find_len);
+            if (replace_len > 0) {
+                str = mus_string_insert(str, replace, i);
+            }
+            end -= len_dif;
+        }
+    }
+    str.len = mus_strlen(str.s);
+    return str;
 }
 
 #ifdef __cplusplus
