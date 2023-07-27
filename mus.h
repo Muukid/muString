@@ -85,14 +85,14 @@ MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size
     #include <string.h>
 #endif
 
-size_m mus_strlen(char* s) {
+MUSDEF size_m mus_strlen(char* s) {
     return strlen(s);
 }
-size_m mus_string_strlen(mustring s) {
+MUSDEF size_m mus_string_strlen(mustring s) {
     return s.len;
 }
 
-mustring mus_string_create(char* s) {
+MUSDEF mustring mus_string_create(char* s) {
     mustring str;
     str.len = mus_strlen(s);
     str.size = (sizeof(char) * (str.len)) * 2;
@@ -104,11 +104,11 @@ mustring mus_string_create(char* s) {
     return str;
 }
 
-void mus_string_destroy(mustring str) {
+MUSDEF void mus_string_destroy(mustring str) {
     mus_free(str.s);
 }
 
-mustring mus_string_size_check(mustring str, size_m size) {
+MUSDEF mustring mus_string_size_check(mustring str, size_m size) {
     MUS_BOOL resized = MUS_FALSE;
     while (str.size < size) {
         str.size *= 2;
@@ -120,7 +120,7 @@ mustring mus_string_size_check(mustring str, size_m size) {
     return str;
 }
 
-MUS_BOOL mus_here(char* str, char* check, size_m i) {
+MUSDEF MUS_BOOL mus_here(char* str, char* check, size_m i) {
     if (str[i] != check[0]) return MUS_FALSE;
     size_m check_len = mus_strlen(check);
     size_m str_len = mus_strlen(str);
@@ -132,7 +132,7 @@ MUS_BOOL mus_here(char* str, char* check, size_m i) {
     return MUS_TRUE;
 }
 
-MUS_BOOL mus_has(char* str, char* find, size_m beg, size_m end) {
+MUSDEF MUS_BOOL mus_has(char* str, char* find, size_m beg, size_m end) {
     size_m find_len = mus_strlen(find);
     for (size_m i = beg; i + find_len < end; i++) {
         /*if (mus_here(str, find, i) == MUS_TRUE) {
@@ -146,7 +146,7 @@ MUS_BOOL mus_has(char* str, char* find, size_m beg, size_m end) {
     return MUS_FALSE;
 }
 
-mustring mus_string_delete(mustring str, size_m beg, size_m end) {
+MUSDEF mustring mus_string_delete(mustring str, size_m beg, size_m end) {
     for (size_m i = end; i < mus_string_strlen(str) + 1; i++) {
         str.s[i-(end-beg)] = str.s[i];
     }
@@ -154,7 +154,7 @@ mustring mus_string_delete(mustring str, size_m beg, size_m end) {
     return str;
 }
 
-mustring mus_string_insert(mustring str, char* insert, size_m i) {
+MUSDEF mustring mus_string_insert(mustring str, char* insert, size_m i) {
     size_m insert_len = mus_strlen(insert);
     str = mus_string_size_check(str, sizeof(char) * (mus_string_strlen(str) + insert_len + 1));
     for (size_m j = mus_string_strlen(str); i < j+1; j--) {
@@ -167,7 +167,7 @@ mustring mus_string_insert(mustring str, char* insert, size_m i) {
     return str;
 }
 
-mustring mus_string_replace(mustring str, char* find, char* replace, size_m beg, size_m end) {
+MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size_m beg, size_m end) {
     size_m find_len = mus_strlen(find);
     size_m replace_len = mus_strlen(replace);
     size_m len_dif = find_len - replace_len;
