@@ -31,20 +31,32 @@ More explicit license information at the end of file.
         #include <stddef.h>
     #endif
     #define size_m size_t
+    #ifndef _WCHAR_T_
+        #include <wchar.h>
+    #endif
+    #define wchar_m wchar_t
 #endif
 
 typedef enum { MUS_FALSE, MUS_TRUE } MUS_BOOL;
+typedef enum { MUS_STRING_TYPE_CHAR, MUS_STRING_TYPE_WCHAR } MUS_STRING_TYPE;
 typedef struct {
     char* s;
+    wchar_m* ws;
+    size_m size_type;
+    MUS_STRING_TYPE type;
     size_m size;
     size_m len;
 } mustring;
 
 MUSDEF size_m mus_strlen(char* s);
 
+MUSDEF size_m mus_wstrlen(wchar_m* ws);
+
 MUSDEF size_m mus_string_strlen(mustring s);
 
 MUSDEF mustring mus_string_create(char* s);
+
+MUSDEF mustring mus_wide_string_create(wchar_m* ws);
 
 MUSDEF void mus_string_destroy(mustring str);
 
@@ -52,13 +64,21 @@ MUSDEF mustring mus_string_size_check(mustring str, size_m size);
 
 MUSDEF MUS_BOOL mus_here(char* str, char* check, size_m i);
 
+MUSDEF MUS_BOOL mus_w_here(wchar_m* str, wchar_m* check, size_m i);
+
 MUSDEF MUS_BOOL mus_has(char* str, char* find, size_m beg, size_m end);
+
+MUSDEF MUS_BOOL mus_w_has(wchar_m* str, wchar_m* find, size_m beg, size_m end);
 
 MUSDEF mustring mus_string_delete(mustring str, size_m beg, size_m end);
 
 MUSDEF mustring mus_string_insert(mustring str, char* insert, size_m i);
 
+MUSDEF mustring mus_string_w_insert(mustring str, wchar_m* insert, size_m i);
+
 MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size_m beg, size_m end);
+
+MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* replace, size_m beg, size_m end);
 
 #ifdef __cplusplus
 	}
@@ -88,6 +108,9 @@ MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size
 MUSDEF size_m mus_strlen(char* s) {
     return strlen(s);
 }
+MUSDEF size_m mus_wstrlen(wchar_m* ws) {
+    return wcslen(ws);
+}
 MUSDEF size_m mus_string_strlen(mustring s) {
     return s.len;
 }
@@ -97,15 +120,34 @@ MUSDEF mustring mus_string_create(char* s) {
     str.len = mus_strlen(s);
     str.size = (sizeof(char) * (str.len)) * 2;
     str.s = mus_malloc(str.size);
+    str.size_type = sizeof(char);
+    str.type = MUS_STRING_TYPE_CHAR;
     for (size_m i = 0; i < str.len; i++) {
         str.s[i] = s[i];
     }
     str.s[str.len] = '\0';
     return str;
 }
+MUSDEF mustring mus_wide_string_create(wchar_m* ws) {
+    mustring str;
+    str.len = mus_wstrlen(ws);
+    str.size = (sizeof(wchar_m) * (str.len)) * 2;
+    str.ws = mus_malloc(str.size);
+    str.size_type = sizeof(wchar_m);
+    str.type = MUS_STRING_TYPE_WCHAR;
+    for (size_m i = 0; i < str.len; i++) {
+        str.ws[i] = ws[i];
+    }
+    str.ws[str.len] = '\0';
+    return str;
+}
 
 MUSDEF void mus_string_destroy(mustring str) {
-    mus_free(str.s);
+    if (str.type == MUS_STRING_TYPE_CHAR) {
+        mus_free(str.s);
+    } else {
+        mus_free(str.ws);
+    }
 }
 
 MUSDEF mustring mus_string_size_check(mustring str, size_m size) {
@@ -115,7 +157,11 @@ MUSDEF mustring mus_string_size_check(mustring str, size_m size) {
         resized = MUS_TRUE;
     }
     if (resized == MUS_TRUE) {
-        str.s = mus_realloc(str.s, str.size);
+        if (str.type == MUS_STRING_TYPE_CHAR) {
+            str.s = mus_realloc(str.s, str.size);
+        } else {
+            str.ws = mus_realloc(str.ws, str.size);
+        }
     }
     return str;
 }
@@ -131,24 +177,48 @@ MUSDEF MUS_BOOL mus_here(char* str, char* check, size_m i) {
     }
     return MUS_TRUE;
 }
+MUSDEF MUS_BOOL mus_w_here(wchar_m* str, wchar_m* check, size_m i) {
+    if (str[i] != check[0]) return MUS_FALSE;
+    size_m check_len = mus_wstrlen(check);
+    size_m str_len = mus_wstrlen(str);
+    for (size_m j = 0; j < check_len; j++) {
+        if (i+j >= str_len || str[i+j] != check[j]) {
+            return MUS_FALSE;
+        }
+    }
+    return MUS_TRUE;
+}
 
 MUSDEF MUS_BOOL mus_has(char* str, char* find, size_m beg, size_m end) {
     size_m find_len = mus_strlen(find);
     for (size_m i = beg; i + find_len < end; i++) {
-        /*if (mus_here(str, find, i) == MUS_TRUE) {
-            return MUS_TRUE;
-        }*/
+        MUS_BOOL found = MUS_TRUE;
         for (size_m j = 0; j < find_len; j++) {
-            if (str[i+j] != find[j]) continue;
+            if (str[i+j] != find[j]) found = MUS_FALSE;
         }
-        return MUS_TRUE;
+        if (found == MUS_TRUE) return MUS_TRUE;
+    }
+    return MUS_FALSE;
+}
+MUSDEF MUS_BOOL mus_w_has(wchar_m* str, wchar_m* find, size_m beg, size_m end) {
+    size_m find_len = mus_wstrlen(find);
+    for (size_m i = beg; i + find_len < end; i++) {
+        MUS_BOOL found = MUS_TRUE;
+        for (size_m j = 0; j < find_len; j++) {
+            if (str[i+j] != find[j]) found = MUS_FALSE;
+        }
+        if (found == MUS_TRUE) return MUS_TRUE;
     }
     return MUS_FALSE;
 }
 
 MUSDEF mustring mus_string_delete(mustring str, size_m beg, size_m end) {
     for (size_m i = end; i < mus_string_strlen(str) + 1; i++) {
-        str.s[i-(end-beg)] = str.s[i];
+        if (str.type == MUS_STRING_TYPE_CHAR) {
+            str.s[i-(end-beg)] = str.s[i];
+        } else {
+            str.ws[i-(end-beg)] = str.ws[i];
+        }
     }
     str.len -= (end - beg);
     return str;
@@ -156,17 +226,47 @@ MUSDEF mustring mus_string_delete(mustring str, size_m beg, size_m end) {
 
 MUSDEF mustring mus_string_insert(mustring str, char* insert, size_m i) {
     size_m insert_len = mus_strlen(insert);
-    str = mus_string_size_check(str, sizeof(char) * (mus_string_strlen(str) + insert_len + 1));
-    for (size_m j = mus_string_strlen(str); i < j+1; j--) {
-        str.s[j+insert_len] = str.s[j];
+    str = mus_string_size_check(str, str.size_type * (mus_strlen(str.s) + insert_len + 1));
+    for (size_m j = mus_strlen(str.s); i < j+1; j--) {
+        if (str.type == MUS_STRING_TYPE_CHAR) {
+            str.s[j+insert_len] = str.s[j];
+        } else {
+            str.ws[j+insert_len] = str.ws[j];
+        }
     }
     for (size_m j = 0; j < insert_len; j++) {
-        str.s[i+j] = insert[j];
+        if (str.type == MUS_STRING_TYPE_CHAR) {
+            str.s[i+j] = insert[j];
+        } else {
+            str.ws[i+j] = insert[j];
+        }
+    }
+    str.len += insert_len;
+    return str;
+}
+MUSDEF mustring mus_string_w_insert(mustring str, wchar_m* insert, size_m i) {
+    size_m insert_len = mus_wstrlen(insert);
+    str = mus_string_size_check(str, str.size_type * (mus_string_strlen(str) + insert_len + 1));
+    for (size_m j = mus_string_strlen(str); i < j+1; j--) {
+        if (str.type == MUS_STRING_TYPE_CHAR) {
+            str.s[j+insert_len] = str.s[j];
+        } else {
+            str.ws[j+insert_len] = str.ws[j];
+        }
+    }
+    for (size_m j = 0; j < insert_len; j++) {
+        if (str.type == MUS_STRING_TYPE_CHAR) {
+            str.s[i+j] = insert[j];
+        } else {
+            str.ws[i+j] = insert[j];
+        }
     }
     str.len += insert_len;
     return str;
 }
 
+// pretty rough hack here by assuming that all replace operations on mustrings
+// will match the character type. please change this later.
 MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size_m beg, size_m end) {
     size_m find_len = mus_strlen(find);
     size_m replace_len = mus_strlen(replace);
@@ -182,6 +282,23 @@ MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size
         }
     }
     str.len = mus_strlen(str.s);
+    return str;
+}
+MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* replace, size_m beg, size_m end) {
+    size_m find_len = mus_wstrlen(find);
+    size_m replace_len = mus_wstrlen(replace);
+    size_m len_dif = find_len - replace_len;
+    if (replace_len > find_len) len_dif = replace_len - find_len;
+    for (size_m i = beg; i < end + 1 && i < mus_string_strlen(str); i++) {
+        if (mus_w_here(str.ws, find, i) == MUS_TRUE) {
+            str = mus_string_delete(str, i, i + find_len);
+            if (replace_len > 0) {
+                str = mus_string_w_insert(str, replace, i);
+            }
+            end -= len_dif;
+        }
+    }
+    str.len = mus_wstrlen(str.ws);
     return str;
 }
 
