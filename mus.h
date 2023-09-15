@@ -11,7 +11,7 @@ More explicit license information at the end of file.
 #define MUS_H
 
 #define MUS_VERSION_MAJOR 1
-#define MUS_VERSION_MINOR 0
+#define MUS_VERSION_MINOR 1
 #define MUS_VERSION_PATCH 0
 
 #ifdef __cplusplus
@@ -46,32 +46,30 @@ typedef struct {
     size_m len;
 } mustring;
 
+MUSDEF size_m mus_wchar_m_string_to_char_size(wchar_m* src);
+MUSDEF void mus_wchar_m_string_to_char_string(char* dest, wchar_m* src, size_m dest_size);
+MUSDEF size_m mus_char_string_to_wchar_m_size(char* src);
+MUSDEF void mus_char_string_to_wchar_m_string(wchar_m* dest, char* src, size_m dest_size);
+
 MUSDEF size_m mus_string_strlen(mustring s);
 
 MUSDEF mustring mus_string_create(char* s);
-
 MUSDEF mustring mus_wide_string_create(wchar_m* ws);
-
 MUSDEF mustring mus_string_destroy(mustring str);
 
 MUSDEF mustring mus_string_size_check(mustring str, size_m size);
 
 MUSDEF MUS_BOOL mus_here(char* str, char* check, size_m i);
-
 MUSDEF MUS_BOOL mus_w_here(wchar_m* str, wchar_m* check, size_m i);
-
 MUSDEF MUS_BOOL mus_has(char* str, char* find, size_m beg, size_m end);
-
 MUSDEF MUS_BOOL mus_w_has(wchar_m* str, wchar_m* find, size_m beg, size_m end);
 
 MUSDEF mustring mus_string_delete(mustring str, size_m beg, size_m end);
 
 MUSDEF mustring mus_string_insert(mustring str, char* insert, size_m i);
-
 MUSDEF mustring mus_string_w_insert(mustring str, wchar_m* insert, size_m i);
 
 MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size_m beg, size_m end);
-
 MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* replace, size_m beg, size_m end);
 
 #ifdef __cplusplus
@@ -88,7 +86,7 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
 	extern "C" {
 #endif
 
-#if !defined(mus_malloc) || !defined(mus_free) || !defined(mus_realloc)
+#if !defined(mus_malloc) || !defined(mus_free) || !defined(mus_realloc) || !defined(mus_mbstowcs) || !defined(mus_wcstombs)
     #include <stdlib.h>
     #ifndef mus_malloc
         #define mus_malloc malloc
@@ -98,6 +96,12 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
     #endif
     #ifndef mus_realloc
         #define mus_realloc realloc
+    #endif
+    #ifndef mus_mbstowcs
+        #define mus_mbstowcs mbstowcs
+    #endif
+    #ifndef mus_wcstombs
+        #define mus_wcstombs wcstombs
     #endif
 #endif
 
@@ -111,6 +115,20 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
         #define mus_wstrlen wcslen
     #endif
 #endif
+
+MUSDEF size_m mus_wchar_m_string_to_char_size(wchar_m* src) {
+    return mus_wcstombs(0, src, 0);
+}
+MUSDEF void mus_wchar_m_string_to_char_string(char* dest, wchar_m* src, size_m dest_size) {
+    mus_wcstombs(dest, src, dest_size);
+}
+
+MUSDEF size_m mus_char_string_to_wchar_m_size(char* src) {
+    return mus_mbstowcs(0, src, 0);
+}
+MUSDEF void mus_char_string_to_wchar_m_string(wchar_m* dest, char* src, size_m dest_size) {
+    mus_mbstowcs(dest, src, dest_size);
+}
 
 MUSDEF size_m mus_string_strlen(mustring s) {
     return s.len;
