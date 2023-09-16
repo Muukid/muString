@@ -392,7 +392,7 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
 }
 
 // did this manually because C standards suck
-// last updated 16 September 2023, covers 0 -> 6313
+// last updated 16 September 2023, covers 0 -> 9290
 // heavily in progress
 // https://en.wikipedia.org/wiki/List_of_Unicode_characters
 // https://www.ssec.wisc.edu/~tomw/java/unicode.html
@@ -442,6 +442,11 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 			(c >= 0x04D0 && c <= 0x04FE && c % 2 == 0) ||
 			// cyrillic supplement
 			(c >= 0x0500 && c <= 0x052E && c % 2 == 0)
+		) ||
+	// latin extended additional
+		(
+			(c >= 7680 && c <= 7828 && c % 2 == 0) ||
+			(c >= 7840 && c <= 7928 && c % 2 == 0)
 		)
 	) {
 		c++;
@@ -464,6 +469,15 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 		)
 	) {
 		return c + 48;
+	} else if (
+	// greek extended
+		(
+			(c >= 7944 && c <= 7951) || (c >= 7960 && c <= 7965) || (c >= 7976 && c <= 7983) || (c >= 7992 && c <= 7999) ||
+			(c >= 8008 && c <= 8013) || (c >= 8025 && c <= 8031) || (c >= 8040 && c <= 8047) || (c >= 8072 && c <= 8079) ||
+			(c >= 8088 && c <= 8095) || (c >= 8104 && c <= 8111) || (c >= 8120 && c <= 8124)
+		)
+	) {
+		return c - 8;
 	}
 	switch (c) {
 	default: break;
@@ -508,6 +522,21 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 	case 1012: return 977; break;
 	case 1017: return 1010; break;
 	case 1021: case 1022: case 1023: return c-130; break;
+
+	// odd greek extended
+	// this is so unsorted it makes my room look like a masterpiece
+	case 8136: case 8137: case 8138: case 8139: return c-86; break;
+	case 8140: return 8131; break;
+	case 8152: return 8144; break;
+	case 8153: return 8145; break;
+	case 8154: case 8155: return c-100; break;
+	case 8168: return 8160; break;
+	case 8169: return 8161; break;
+	case 8170: return 8058; break;
+	case 8171: return 8059; break;
+	case 8172: return 8165; break;
+	case 8184: case 8185: return c-128; break;
+	case 8187: return 8061; break;
 	}
 	return c;
 }
@@ -556,6 +585,11 @@ MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
 			(c >= 0x04D1 && c <= 0x04FF && c % 2 != 0) ||
 			// cyrillic supplement
 			(c >= 0x0501 && c <= 0x052F && c % 2 != 0)
+		) ||
+	// latin extended additional
+		(
+			(c >= 7681 && c <= 7829 && c % 2 != 0) ||
+			(c >= 7841 && c <= 7929 && c % 2 != 0)
 		)
 	) {
 		c--;
@@ -578,6 +612,15 @@ MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
 		)
 	) {
 		return c - 48;
+	} else if (
+	// greek extended
+		(
+			(c >= (7944-8) && c <= (7951-8)) || (c >= (7960-8) && c <= (7965-8)) || (c >= (7976-8) && c <= (7983-8)) || (c >= (7992-8) && c <= (7999-8)) ||
+			(c >= (8008-8) && c <= (8013-8)) || (c >= (8025-8) && c <= (8031-8)) || (c >= (8040-8) && c <= (8047-8)) || (c >= (8072-8) && c <= (8079-8)) ||
+			(c >= (8088-8) && c <= (8095-8)) || (c >= (8104-8) && c <= (8111-8)) || (c >= (8120-8) && c <= (8124-8))
+		)
+	) {
+		return c + 8;
 	}
 	switch (c) {
 	default: break;
@@ -622,6 +665,21 @@ MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
 	case 977: return 1012; break;
 	case 1010: return 1017; break;
 	case 891: case 892: case 893: return c+130; break;
+
+	// odd greek extended
+	// this is so unsorted it makes my room look like a masterpiece
+	case 8050: case 8051: case 8052: case 8053: return c+86; break;
+	case 8131: return 8140; break;
+	case 8144: return 8152; break;
+	case 8145: return 8153; break;
+	case 8054: case 8055: return c+100; break;
+	case 8160: return 8168; break;
+	case 8161: return 8169; break;
+	case 8058: return 8170; break;
+	case 8059: return 8171; break;
+	case 8165: return 8172; break;
+	case 8056: case 8057: return c+128; break;
+	case 8061: return 8187; break;
 	}
 	return c;
 }
