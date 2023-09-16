@@ -1,5 +1,3 @@
-
-﻿
 # mus
 mus, pronounced "moose", is a public domain simple single-file C library for easy string allocation and manipulation. To use it, simply download the `mus.h` file, add it to your include path, and include it like so:
 ```
@@ -218,3 +216,45 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
 Finds all instances of `find` within the string contents of `str` and replaces it with `replace`, scanning from index `beg` to `end` within the string contents of `str`.
 
 Note that `str` doesn't need to match the character type of insertion, meaning that you can use `mus_string_replace` on a wide-character string and vice versa, but it's not recommended, as it can be slow.
+
+## Lowercase/Uppercase string conversion
+There are two functions for converting a string to lowercase or uppercase, `mus_string_to_lowercase` and `mus_string_to_uppercase`, both defined below in `MUS_H`:
+
+```
+MUSDEF mustring mus_string_to_lowercase(mustring str, size_m beg, size_m end);
+MUSDEF mustring mus_string_to_uppercase(mustring str, size_m beg, size_m end);
+```
+
+Converts all characters from index `beg` to index `end` to uppercase/lowercase.
+
+Note that these functions can be called with any type of `mustring`.
+
+Note that these functions have reliance on `mus_char_to_lowercase`, `mus_wchar_to_lowercase`, `mus_char_to_uppercase`, and `mus_wchar_to_uppercase`, meaning that the uppercase/lowercase conversion logic is done using said functions, and restrictions on ASCII/Unicode standards apply according to said functions.
+
+## Lowercase/Uppercase character conversion
+There are four functions for converting a character to lowercase or uppercase, `mus_char_to_lowercase`, `mus_wchar_to_lowercase`, `mus_char_to_uppercase`, and `mus_wchar_to_uppercase`, all four defined below in `MUS_H`:
+
+```
+MUSDEF char 	mus_char_to_lowercase(char c);
+MUSDEF wchar_m 	mus_wchar_to_lowercase(wchar_m c);
+MUSDEF char 	mus_char_to_uppercase(char c);
+MUSDEF wchar_m 	mus_wchar_to_uppercase(wchar_m c);
+```
+
+Converts the given character to lowercase/uppercase and returns the result.
+
+Note that `mus_char_to_lowercase` and `mus_char_to_uppercase` uses normal ASCII logic (-128 to 127), but `mus_wchar_to_lowercase` and `mus_wchar_to_uppercase` use the Unicode standard and cover code points 0 to 65,533.
+
+## Lowercase/Uppercase character check
+There are four functions to see if a character is lowercase or uppercase, `mus_char_is_lowercase`, `mus_wchar_is_lowercase`, `mus_char_is_uppercase`, and `mus_wchar_is_uppercase`, all four defined below in `MUS_H`:
+
+```
+MUSDEF MUS_BOOL mus_char_is_lowercase(char c);
+MUSDEF MUS_BOOL mus_wchar_is_lowercase(wchar_m c);
+MUSDEF MUS_BOOL mus_char_is_uppercase(char c);
+MUSDEF MUS_BOOL mus_wchar_is_uppercase(wchar_m c);
+```
+
+Note that each function will return `MUS_FALSE` if the given character is neither uppercase nor lowercase.
+
+Note that these functions have reliance on `mus_char_is_lowercase`, `mus_wchar_is_lowercase`, `mus_char_is_uppercase`, and `mus_wchar_is_uppercase`, meaning that the uppercase/lowercase conversion logic is done using said functions, and restrictions on ASCII/Unicode standards apply according to said functions.
