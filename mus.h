@@ -10,8 +10,8 @@ More explicit license information at the end of file.
 #ifndef MUS_H
 #define MUS_H
 
-#define MUS_VERSION_MAJOR 1
-#define MUS_VERSION_MINOR 1
+#define MUS_VERSION_MAJOR 2
+#define MUS_VERSION_MINOR 0
 #define MUS_VERSION_PATCH 0
 
 #ifdef __cplusplus
@@ -39,6 +39,7 @@ More explicit license information at the end of file.
 #define MUS_NULL 0
 
 typedef enum { MUS_FALSE, MUS_TRUE } MUS_BOOL;
+
 typedef enum { MUS_STRING_TYPE_CHAR, MUS_STRING_TYPE_WCHAR } MUS_STRING_TYPE;
 typedef struct {
     char* s;
@@ -47,6 +48,8 @@ typedef struct {
     size_m size;
     size_m len;
 } mustring;
+
+/* string */
 
 MUSDEF size_m mus_wchar_m_string_to_char_size(wchar_m* src);
 MUSDEF void mus_wchar_m_string_to_char_string(char* dest, wchar_m* src, size_m dest_size);
@@ -73,6 +76,18 @@ MUSDEF mustring mus_string_w_insert(mustring str, wchar_m* insert, size_m i);
 
 MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size_m beg, size_m end);
 MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* replace, size_m beg, size_m end);
+
+/* character uppercase/lowercase */
+
+MUSDEF char 	mus_char_to_lowercase(char c);
+MUSDEF wchar_m 	mus_wchar_to_lowercase(wchar_m c);
+MUSDEF char 	mus_char_to_uppercase(char c);
+MUSDEF wchar_m 	mus_wchar_to_uppercase(wchar_m c);
+
+MUSDEF MUS_BOOL mus_char_is_lowercase(char c);
+MUSDEF MUS_BOOL mus_wchar_is_lowercase(wchar_m c);
+MUSDEF MUS_BOOL mus_char_is_uppercase(char c);
+MUSDEF MUS_BOOL mus_wchar_is_uppercase(wchar_m c);
 
 #ifdef __cplusplus
 	}
@@ -374,6 +389,100 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
     }
     str.len = mus_wstrlen(str.ws);
     return str;
+}
+
+// did this manually because standards suck
+// https://en.wikipedia.org/wiki/List_of_Unicode_characters
+// last updated 15 September 2023, covers 0 -> 383
+// heavily in progress
+
+MUSDEF char mus_char_to_lowercase(char c) {
+	if (c >= 65 && c <= 90) c += 32;
+	return c;
+}
+MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
+	if (
+	// latin alphabet
+		(c >= 65 && c <= 90) ||
+	// latin-1 supplement
+		(c >= 192 && c <= 222 && c != 215)
+	) {
+		c += 32;
+		return c;
+	} else if (
+	// latin extended-a
+		(
+			(c >= 256 && c <= 310 && c % 2 == 0) || 
+			(c >= 313 && c <= 327 && c % 2 != 0) ||
+			(c >= 330 && c <= 376 && c % 2 == 0) ||
+			(c >= 377 && c <= 381 && c % 2 != 0)
+		)
+	) {
+		c++;
+		return c;
+	}
+	switch (c) {
+	default: break;
+	// latin extended-b / ipa extensions (in-progress)
+	case 386: case 388: case 391: case 395: case 401: return c+1; break;
+	case 384: return 579; break;
+	case 385: return 595; break;
+	case 390: return 596; break;
+	case 393: return 598; break;
+	case 394: return 599; break;
+	case 398: return 600; break;
+	case 399: return 601; break;
+	case 400: return 603; break;
+	case 403: return 608; break;
+	}
+	return c;
+}
+MUSDEF char mus_char_to_uppercase(char c) {
+	if (c >= 97 && c <= 122) c -= 32;
+	return c;
+}
+MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
+	if (
+	// latin alphabet
+		(c >= 97 && c <= 122) ||
+	// latin-1 supplement
+		(c >= 223 && c <= 255 && c != 247)
+	) {
+		c -= 32;
+		return c;
+	} else if (
+	// latin extended-a
+		(
+			(c >= 257 && c <= 311 && c % 2 != 0) || 
+			(c >= 312 && c <= 328 && c % 2 == 0) ||
+			(c >= 329 && c <= 375 && c % 2 != 0) ||
+			(c >= 378 && c <= 382 && c % 2 == 0)
+		)
+	) {
+		c++;
+		return c;
+	}
+	switch (c) {
+	// latin extended-b / ipa extensions (in-progress)
+	default: break;
+	case 579: return 384; break;
+	case 595: return 385; break;
+	}
+	return c;
+}
+
+// these funcs aren't entirely necessary
+MUSDEF MUS_BOOL mus_char_is_lowercase(char c) {
+	return c != mus_char_to_uppercase(c);
+}
+MUSDEF MUS_BOOL mus_wchar_is_lowercase(wchar_m c) {
+	return c != mus_wchar_to_uppercase(c);
+}
+MUSDEF MUS_BOOL mus_char_is_uppercase(char c) {
+	return c != mus_char_to_lowercase(c);
+}
+MUSDEF MUS_BOOL mus_wchar_is_uppercase(wchar_m c) {
+	return c != mus_wchar_to_lowercase(c);
 }
 
 #ifdef __cplusplus
