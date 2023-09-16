@@ -1,3 +1,4 @@
+
 ﻿
 # mus
 mus, pronounced "moose", is a public domain simple single-file C library for easy string allocation and manipulation. To use it, simply download the `mus.h` file, add it to your include path, and include it like so:
@@ -29,6 +30,10 @@ There are a few defines that mus uses that rely on the C standard library to def
 `mus_malloc`: equivalent to `malloc`, uses `stdlib.h` for definition.
 `mus_free`: equivalent to `free`, uses `stdlib.h` for definition.
 `mus_realloc`: equivalent to `realloc`, uses `stdlib.h` for definition.
+`mus_mbstowcs`: equivalent to `mbstowcs`, uses `stdlib.h` for definition.
+`mus_mbsrtowcs`: equivalent to `mbsrtowcs`, uses `stdlib.h` for definition.
+`mus_wcstombs`: equivalent to `wcstombs`, uses `stdlib.h` for definition.
+`mus_wcsrtombs`: equivalent to `wcsrtombs`, uses `stdlib.h` for definition.
 `mus_strlen`: equivalent to `strlen`, uses `string.h` for definition.
 `mus_wstrlen`: equivalent to `wcslen`, uses `wchar.h` for definition.
 
@@ -71,6 +76,35 @@ typedef struct {
 Note that mus allocates twice the amount of space than requested and then doubles it every time that it needs to reallocate more data, meaning that `size` and `len` never match and cannot be used interchangeably.
 
 # Functions
+
+## `char` to `wchar_m` and vice versa
+There are four total functions used in the conversion of `char` strings and `wchar_m` strings, two to calculate the necessary size for conversions and two to actually execute the conversions.
+
+If you'd like to calculate the necessary size, in bytes, to convert a `wchar_m` string to a `char` or vice versa, you can use the two functions `mus_wchar_m_string_to_char_size` and `mus_char_string_to_wchar_m_size`, defined below in `MUS_H`:
+
+```
+MUSDEF size_m mus_wchar_m_string_to_char_size(wchar_m* src);
+MUSDEF size_m mus_char_string_to_wchar_m_size(char* src);
+```
+
+Calculates the size necessary, in bytes, to convert `src`.
+
+Note that the size returned needs to be multiplied by the data type. For example, to fully calculate the size necessary for version with `mus_wchar_m_string_to_char_size`, you'd have to do:
+
+```
+size_m actual_size = mus_wchar_m_string_to_char_size(...) * sizeof(wchar_m);
+```
+
+The same logic applies to `mus_char_string_to_wchar_m_size`.
+
+If you'd like to convert a `wchar_m` string to a `char` or vice versa, you can use the two functions `mus_wchar_m_string_to_char_string` and `mus_char_string_to_wchar_m_string`, defined below in `MUS_H`:
+
+```
+MUSDEF void mus_wchar_m_string_to_char_string(char* dest, wchar_m* src, size_m dest_size);
+MUSDEF void mus_char_string_to_wchar_m_string(wchar_m* dest, char* src, size_m dest_size);
+```
+
+Converts `src` and stores the result in `dest` given that `dest_size` is enough to hold the data for the conversion.
 
 ## String length
 There are three functions to check the length of a string. If you're using a `mustring` struct, you should always use the function `mus_string_strlen`, defined below in `MUS_H`:
@@ -161,7 +195,7 @@ MUSDEF mustring mus_string_w_insert(mustring str, wchar_m* insert, size_m i);
 
 Inserts `insert` into the string contents of `str` at index `i`.
 
-Note that `str` *must* match the character type of insertion, aka `mus_string_insert` must only be used with `mustring`s whose `type` is equal to `MUS_STRING_TYPE_CHAR`, and `mus_string_w_insert` must only be used with `mustring`s whose `type` is equal to `MUS_STRING_TYPE_WCHAR`.
+Note that `str` doesn't need to match the character type of insertion, meaning that you can use `mus_string_insert` on a wide-character string and vice versa, but it's not recommended, as it can be slow.
 
 ## Replacing all instances of a string with another
 There are two functions for replacing all instances of a string with another, `mus_string_replace` for `char` strings and `mus_string_w_replace` for `wchar_m` strings, both defined below in `MUS_H`:
@@ -173,4 +207,4 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
 
 Finds all instances of `find` within the string contents of `str` and replaces it with `replace`, scanning from index `beg` to `end` within the string contents of `str`.
 
-Note that `str` *must* match the character type of insertion, aka `mus_string_replace` must only be used with `mustring`s whose `type` is equal to `MUS_STRING_TYPE_CHAR`, and `mus_string_w_replace` must only be used with `mustring`s whose `type` is equal to `MUS_STRING_TYPE_WCHAR`.
+Note that `str` doesn't need to match the character type of insertion, meaning that you can use `mus_string_replace` on a wide-character string and vice versa, but it's not recommended, as it can be slow.
