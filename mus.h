@@ -393,7 +393,7 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
 
 // did this manually because C standards suck
 // https://en.wikipedia.org/wiki/List_of_Unicode_characters
-// last updated 16 September 2023, covers 0 -> 879
+// last updated 16 September 2023, covers 0 -> 1023
 // heavily in progress
 
 MUSDEF char mus_char_to_lowercase(char c) {
@@ -405,7 +405,9 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 	// latin alphabet
 		(c >= 65 && c <= 90) ||
 	// latin-1 supplement
-		(c >= 192 && c <= 222 && c != 215)
+		(c >= 192 && c <= 222 && c != 215) ||
+	// greek and coptic
+		(c >= 913 && c <= 939)
 	) {
 		c += 32;
 		return c;
@@ -424,6 +426,10 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 			(c >= 504 && c <= 542 && c % 2 == 0) ||
 			(c >= 546 && c <= 562 && c % 2 == 0) ||
 			(c >= 582 && c <= 590 && c % 2 == 0)
+		) ||
+	// greek and coptic
+		(
+			(c >= 984 && c <= 1006 && c % 2 == 0)
 		)
 	) {
 		c++;
@@ -463,6 +469,16 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 	case 579: return 384; break;
 	case 580: return 649; break;
 	case 581: return 652; break;
+
+	// odd greek and coptic
+	case 880: case 882: case 886: case 1015: case 1018: return c+1; break;
+	case 895: return 1011; break;
+	case 904: case 905: case 906: return c+37; break;
+	case 908: case 910: case 911: return c+64; break;
+	case 975: return 983; break;
+	case 1012: return 977; break;
+	case 1017: return 1010; break;
+	case 1021: case 1022: case 1023: return c-130; break;
 	}
 	return c;
 }
@@ -475,7 +491,9 @@ MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
 	// latin alphabet
 		(c >= 97 && c <= 122) ||
 	// latin-1 supplement
-		(c >= 224 && c <= 255 && c != 247)
+		(c >= 224 && c <= 255 && c != 247) ||
+	// greek and coptic
+		(c >= 945 && c <= 971)
 	) {
 		c -= 32;
 		return c;
@@ -494,6 +512,10 @@ MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
 			(c >= 505 && c <= 543 && c % 2 != 0) ||
 			(c >= 547 && c <= 563 && c % 2 != 0) ||
 			(c >= 583 && c <= 591 && c % 2 != 0)
+		) ||
+	// greek and coptic
+		(
+			(c >= 985 && c <= 1007 && c % 2 != 0)
 		)
 	) {
 		c--;
@@ -534,6 +556,16 @@ MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
 	case 384: return 579; break;
 	case 649: return 580; break;
 	case 652: return 581; break;
+
+	// odd greek and coptic
+	case 881: case 883: case 887: case 1016: case 1019: return c-1; break;
+	case 1011: return 895; break;
+	case 941: case 942: case 943: return c-37; break;
+	case 972: case 974: case 975: return c-64; break;
+	case 983: return 975; break;
+	case 977: return 1012; break;
+	case 1010: return 1017; break;
+	case 891: case 892: case 893: return c+130; break;
 	}
 	return c;
 }
