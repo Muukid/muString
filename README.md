@@ -26,15 +26,25 @@ Whether or not mus defines its functions as static or extern can be controlled b
 There are a few defines that mus uses that rely on the C standard library to define themselves, all of which can be defined by the user before including the file if they wish to customize them. These are:
 
 `size_m` : equivalent to `size_t`, uses `stddef.h` for definition.
+
 `wchar_m`: equivalent to `wchar_t`, uses `wchar.h` for definition.
+
 `mus_malloc`: equivalent to `malloc`, uses `stdlib.h` for definition.
+
 `mus_free`: equivalent to `free`, uses `stdlib.h` for definition.
+
 `mus_realloc`: equivalent to `realloc`, uses `stdlib.h` for definition.
+
 `mus_mbstowcs`: equivalent to `mbstowcs`, uses `stdlib.h` for definition.
+
 `mus_mbsrtowcs`: equivalent to `mbsrtowcs`, uses `stdlib.h` for definition.
+
 `mus_wcstombs`: equivalent to `wcstombs`, uses `stdlib.h` for definition.
+
 `mus_wcsrtombs`: equivalent to `wcsrtombs`, uses `stdlib.h` for definition.
+
 `mus_strlen`: equivalent to `strlen`, uses `string.h` for definition.
+
 `mus_wstrlen`: equivalent to `wcslen`, uses `wchar.h` for definition.
 
 # Enumerators
