@@ -393,7 +393,7 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
 
 // did this manually because C standards suck
 // https://en.wikipedia.org/wiki/List_of_Unicode_characters
-// last updated 16 September 2023, covers 0 -> 1023
+// last updated 16 September 2023, covers 0 -> 1279
 // heavily in progress
 
 MUSDEF char mus_char_to_lowercase(char c) {
@@ -407,7 +407,9 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 	// latin-1 supplement
 		(c >= 192 && c <= 222 && c != 215) ||
 	// greek and coptic
-		(c >= 913 && c <= 939)
+		(c >= 913 && c <= 939) ||
+	// cyrillic
+		(c >= 0x0410 && c <= 0x042F)
 	) {
 		c += 32;
 		return c;
@@ -430,17 +432,30 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 	// greek and coptic
 		(
 			(c >= 984 && c <= 1006 && c % 2 == 0)
+		) ||
+	// cyrillic
+		(
+			(c >= 0x0460 && c <= 0x0480 && c % 2 == 0) ||
+			(c >= 0x048A && c <= 0x04BE && c % 2 == 0) ||
+			(c >= 0x04C1 && c <= 0x04CD && c % 2 != 0) ||
+			(c >= 0x04D0 && c <= 0x04FE && c % 2 == 0)
 		)
 	) {
 		c++;
 		return c;
+	} else if (
+	// cyrillic
+		(
+			(c >= 0x0400 && c <= 0x040F)
+		)
+	) {
+		return c + 80;
 	}
 	switch (c) {
 	default: break;
 	// odd latin extended-b / ipa extensions
 	case 386: case 388: case 391: case 395: case 401: case 408: case 416: case 418: case 420: case 423: case 428: case 431: 
 	case 435: case 437: case 440: case 444: case 453: case 456: case 459: case 498: case 500: case 571: case 577: return c+1; break;
-
 	case 384: return 579; break;
 	case 385: return 595; break;
 	case 390: return 596; break;
@@ -493,7 +508,9 @@ MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
 	// latin-1 supplement
 		(c >= 224 && c <= 255 && c != 247) ||
 	// greek and coptic
-		(c >= 945 && c <= 971)
+		(c >= 945 && c <= 971) ||
+	// cyrillic
+		(c >= (0x0410 + 32) && c <= (0x042F + 32))
 	) {
 		c -= 32;
 		return c;
@@ -516,18 +533,30 @@ MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
 	// greek and coptic
 		(
 			(c >= 985 && c <= 1007 && c % 2 != 0)
+		) ||
+	// cyrillic
+		(
+			(c >= 0x0461 && c <= 0x0481 && c % 2 != 0) ||
+			(c >= 0x048B && c <= 0x04BF && c % 2 != 0) ||
+			(c >= 0x04C2 && c <= 0x04CE && c % 2 == 0) ||
+			(c >= 0x04D1 && c <= 0x04FF && c % 2 != 0)
 		)
 	) {
 		c--;
 		return c;
+	} else if (
+	// cyrillic
+		(
+			(c >= (0x0400+80) && c <= (0x040F+80))
+		)
+	) {
+		return c - 80;
 	}
 	switch (c) {
-	// latin extended-b / ipa extensions
 	default: break;
 	// odd latin extended-b / ipa extensions
 	case 387: case 389: case 392: case 396: case 402: case 409: case 417: case 419: case 421: case 424: case 429: case 432: 
 	case 436: case 438: case 441: case 445: case 453: case 456: case 459: case 498: case 501: case 572: case 578: return c-1; break;
-
 	case 579: return 384; break;
 	case 595: return 385; break;
 	case 596: return 390; break;
