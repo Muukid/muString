@@ -318,6 +318,18 @@ MUSDEF mustring mus_string_w_insert(mustring str, wchar_m* insert, size_m i) {
 }
 
 MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size_m beg, size_m end) {
+	if (str.type == MUS_STRING_TYPE_WCHAR) {
+    	size_m find_size = mus_char_string_to_wchar_m_size(find);
+    	size_m replace_size = mus_char_string_to_wchar_m_size(replace);
+    	wchar_m* find_w = mus_malloc(find_size * sizeof(wchar_m));
+    	wchar_m* replace_w = mus_malloc(replace_size * sizeof(wchar_m));
+    	mus_char_string_to_wchar_m_string(find_w, find, find_size);
+    	mus_char_string_to_wchar_m_string(replace_w, replace, replace_size);
+    	str = mus_string_w_replace(str, find_w, replace_w, beg, end);
+    	mus_free(find_w);
+    	mus_free(replace_w);
+    	return str;
+    }
     size_m find_len = mus_strlen(find);
     size_m replace_len = mus_strlen(replace);
     size_m len_dif = find_len - replace_len;
@@ -335,6 +347,18 @@ MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size
     return str;
 }
 MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* replace, size_m beg, size_m end) {
+	if (str.type == MUS_STRING_TYPE_CHAR) {
+    	size_m find_size = mus_wchar_m_string_to_char_size(find);
+    	size_m replace_size = mus_wchar_m_string_to_char_size(replace);
+    	char* find_c = mus_malloc(find_size * sizeof(char));
+    	char* replace_c = mus_malloc(replace_size * sizeof(char));
+    	mus_wchar_m_string_to_char_string(find_c, find, find_size);
+    	mus_wchar_m_string_to_char_string(replace_c, replace, replace_size);
+    	str = mus_string_replace(str, find_c, replace_c, beg, end);
+    	mus_free(find_c);
+    	mus_free(replace_c);
+    	return str;
+    }
     size_m find_len = mus_wstrlen(find);
     size_m replace_len = mus_wstrlen(replace);
     size_m len_dif = find_len - replace_len;
