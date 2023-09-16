@@ -392,8 +392,7 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
 }
 
 // did this manually because C standards suck
-// last updated 16 September 2023, covers 0 -> 9290
-// heavily in progress
+// last updated 16 September 2023, covers 0 -> 65533
 // https://en.wikipedia.org/wiki/List_of_Unicode_characters
 // https://www.ssec.wisc.edu/~tomw/java/unicode.html
 
@@ -410,10 +409,11 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 	// greek and coptic
 		(c >= 913 && c <= 939) ||
 	// cyrillic
-		(c >= 0x0410 && c <= 0x042F)
+		(c >= 0x0410 && c <= 0x042F) ||
+	// halfwidth and fullwidth forms
+		(c >= 65313 && c <= 65338)
 	) {
-		c += 32;
-		return c;
+		return c + 32;
 	} else if (
 	// latin extended-a
 		(
@@ -449,8 +449,7 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 			(c >= 7840 && c <= 7928 && c % 2 == 0)
 		)
 	) {
-		c++;
-		return c;
+		return c + 1;
 	} else if (
 	// cyrillic
 		(
@@ -478,6 +477,13 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 		)
 	) {
 		return c - 8;
+	} else if (
+	// enclosed alphanumerics
+		(
+			(c >= 9398 && c <= 9423)
+		)
+	) {
+		return c + 26;
 	}
 	switch (c) {
 	default: break;
@@ -553,10 +559,11 @@ MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
 	// greek and coptic
 		(c >= 945 && c <= 971) ||
 	// cyrillic
-		(c >= (0x0410 + 32) && c <= (0x042F + 32))
+		(c >= (0x0410 + 32) && c <= (0x042F + 32)) ||
+	// halfwidth and fullwidth forms
+		(c >= (65313 + 32) && c <= (65338 + 32))
 	) {
-		c -= 32;
-		return c;
+		return c - 32;
 	} else if (
 	// latin extended-a
 		(
@@ -592,8 +599,7 @@ MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
 			(c >= 7841 && c <= 7929 && c % 2 != 0)
 		)
 	) {
-		c--;
-		return c;
+		return c - 1;
 	} else if (
 	// cyrillic
 		(
@@ -621,6 +627,13 @@ MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
 		)
 	) {
 		return c + 8;
+	} else if (
+	// enclosed alphanumerics
+		(
+			(c >= (9398+26) && c <= (9423+26))
+		)
+	) {
+		return c - 26;
 	}
 	switch (c) {
 	default: break;
