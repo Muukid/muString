@@ -36,6 +36,8 @@ More explicit license information at the end of file.
     #define wchar_m wchar_t
 #endif
 
+#define MUS_NULL 0
+
 typedef enum { MUS_FALSE, MUS_TRUE } MUS_BOOL;
 typedef enum { MUS_STRING_TYPE_CHAR, MUS_STRING_TYPE_WCHAR } MUS_STRING_TYPE;
 typedef struct {
@@ -86,7 +88,14 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
 	extern "C" {
 #endif
 
-#if !defined(mus_malloc) || !defined(mus_free) || !defined(mus_realloc) || !defined(mus_mbstowcs) || !defined(mus_wcstombs)
+#if !defined(mus_malloc) 	|| \
+	!defined(mus_free) 		|| \
+	!defined(mus_realloc) 	|| \
+	!defined(mus_mbstowcs) 	|| \
+	!defined(mus_mbsrtowcs) || \
+	!defined(mus_wcstombs) 	|| \
+	!defined(mus_wcsrtombs)
+
     #include <stdlib.h>
     #ifndef mus_malloc
         #define mus_malloc malloc
@@ -100,8 +109,14 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
     #ifndef mus_mbstowcs
         #define mus_mbstowcs mbstowcs
     #endif
+	#ifndef mus_mbsrtowcs
+        #define mus_mbsrtowcs mbsrtowcs
+    #endif
     #ifndef mus_wcstombs
         #define mus_wcstombs wcstombs
+    #endif
+	#ifndef mus_wcsrtombs
+        #define mus_wcsrtombs wcsrtombs
     #endif
 #endif
 
@@ -116,15 +131,17 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
     #endif
 #endif
 
+// not sure if multi-byte state being null is fully safe
+
 MUSDEF size_m mus_wchar_m_string_to_char_size(wchar_m* src) {
-    return mus_wcstombs(0, src, 0);
+    return mus_wcsrtombs(MUS_NULL, (const wchar_m**)&src, 1, MUS_NULL);
 }
 MUSDEF void mus_wchar_m_string_to_char_string(char* dest, wchar_m* src, size_m dest_size) {
     mus_wcstombs(dest, src, dest_size);
 }
 
 MUSDEF size_m mus_char_string_to_wchar_m_size(char* src) {
-    return mus_mbstowcs(0, src, 0);
+    return mus_mbsrtowcs(MUS_NULL, (const char**)&src, 1, MUS_NULL);
 }
 MUSDEF void mus_char_string_to_wchar_m_string(wchar_m* dest, char* src, size_m dest_size) {
     mus_mbstowcs(dest, src, dest_size);
@@ -244,7 +261,14 @@ MUSDEF mustring mus_string_delete(mustring str, size_m beg, size_m end) {
 }
 
 MUSDEF mustring mus_string_insert(mustring str, char* insert, size_m i) {
-    if (str.type == MUS_STRING_TYPE_WCHAR) return str;
+    if (str.type == MUS_STRING_TYPE_WCHAR) {
+    	size_m size = mus_char_string_to_wchar_m_size(insert);
+    	wchar_m* insert_w = mus_malloc(size * sizeof(wchar_m));
+    	mus_char_string_to_wchar_m_string(insert_w, insert, size);
+    	str = mus_string_w_insert(str, insert_w, i);
+    	mus_free(insert_w);
+    	return str;
+    }
     size_m insert_len = mus_strlen(insert);
     str = mus_string_size_check(str, sizeof(char) * (mus_string_strlen(str) + insert_len + 1));
     for (size_m j = mus_strlen(str.s); i < j+1; j--) {
@@ -265,7 +289,14 @@ MUSDEF mustring mus_string_insert(mustring str, char* insert, size_m i) {
     return str;
 }
 MUSDEF mustring mus_string_w_insert(mustring str, wchar_m* insert, size_m i) {
-    if (str.type == MUS_STRING_TYPE_CHAR) return str;
+    if (str.type == MUS_STRING_TYPE_CHAR) {
+    	size_m size = mus_wchar_m_string_to_char_size(insert);
+    	char* insert_c = mus_malloc(size * sizeof(char));
+    	mus_wchar_m_string_to_char_string(insert_c, insert, size);
+    	str = mus_string_insert(str, insert_c, i);
+    	mus_free(insert_c);
+    	return str;
+    }
     size_m insert_len = mus_wstrlen(insert);
     str = mus_string_size_check(str, sizeof(wchar_m) * (mus_string_strlen(str) + insert_len + 1));
     for (size_m j = mus_string_strlen(str); i < j+1; j--) {
