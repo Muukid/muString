@@ -391,9 +391,9 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
     return str;
 }
 
-// did this manually because standards suck
+// did this manually because C standards suck
 // https://en.wikipedia.org/wiki/List_of_Unicode_characters
-// last updated 15 September 2023, covers 0 -> 383
+// last updated 16 September 2023, covers 0 -> 879
 // heavily in progress
 
 MUSDEF char mus_char_to_lowercase(char c) {
@@ -416,6 +416,14 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 			(c >= 313 && c <= 327 && c % 2 != 0) ||
 			(c >= 330 && c <= 376 && c % 2 == 0) ||
 			(c >= 377 && c <= 381 && c % 2 != 0)
+		) ||
+	// latin extended-b
+		(
+			(c >= 461 && c <= 475 && c % 2 != 0) ||
+			(c >= 478 && c <= 494 && c % 2 == 0) ||
+			(c >= 504 && c <= 542 && c % 2 == 0) ||
+			(c >= 546 && c <= 562 && c % 2 == 0) ||
+			(c >= 582 && c <= 590 && c % 2 == 0)
 		)
 	) {
 		c++;
@@ -423,8 +431,10 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 	}
 	switch (c) {
 	default: break;
-	// latin extended-b / ipa extensions (in-progress)
-	case 386: case 388: case 391: case 395: case 401: return c+1; break;
+	// odd latin extended-b / ipa extensions
+	case 386: case 388: case 391: case 395: case 401: case 408: case 416: case 418: case 420: case 423: case 428: case 431: 
+	case 435: case 437: case 440: case 444: case 453: case 456: case 459: case 498: case 500: case 571: case 577: return c+1; break;
+
 	case 384: return 579; break;
 	case 385: return 595; break;
 	case 390: return 596; break;
@@ -434,6 +444,25 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 	case 399: return 601; break;
 	case 400: return 603; break;
 	case 403: return 608; break;
+	case 404: return 611; break;
+	case 406: return 617; break;
+	case 407: return 616; break;
+	case 412: return 623; break;
+	case 413: return 626; break;
+	case 425: return 643; break;
+	case 430: return 648; break;
+	case 433: return 650; break;
+	case 434: return 641; break;
+	case 439: return 658; break;
+	case 452: return 454; break;
+	case 455: return 457; break;
+	case 458: return 460; break;
+	case 497: return 499; break;
+	case 544: return 414; break;
+	case 573: return 410; break;
+	case 579: return 384; break;
+	case 580: return 649; break;
+	case 581: return 652; break;
 	}
 	return c;
 }
@@ -446,7 +475,7 @@ MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
 	// latin alphabet
 		(c >= 97 && c <= 122) ||
 	// latin-1 supplement
-		(c >= 223 && c <= 255 && c != 247)
+		(c >= 224 && c <= 255 && c != 247)
 	) {
 		c -= 32;
 		return c;
@@ -457,16 +486,54 @@ MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
 			(c >= 312 && c <= 328 && c % 2 == 0) ||
 			(c >= 329 && c <= 375 && c % 2 != 0) ||
 			(c >= 378 && c <= 382 && c % 2 == 0)
+		) ||
+	// latin extended-b
+		(
+			(c >= 462 && c <= 476 && c % 2 == 0) ||
+			(c >= 479 && c <= 495 && c % 2 != 0) ||
+			(c >= 505 && c <= 543 && c % 2 != 0) ||
+			(c >= 547 && c <= 563 && c % 2 != 0) ||
+			(c >= 583 && c <= 591 && c % 2 != 0)
 		)
 	) {
-		c++;
+		c--;
 		return c;
 	}
 	switch (c) {
-	// latin extended-b / ipa extensions (in-progress)
+	// latin extended-b / ipa extensions
 	default: break;
+	// odd latin extended-b / ipa extensions
+	case 387: case 389: case 392: case 396: case 402: case 409: case 417: case 419: case 421: case 424: case 429: case 432: 
+	case 436: case 438: case 441: case 445: case 453: case 456: case 459: case 498: case 501: case 572: case 578: return c-1; break;
+
 	case 579: return 384; break;
 	case 595: return 385; break;
+	case 596: return 390; break;
+	case 598: return 393; break;
+	case 599: return 394; break;
+	case 600: return 398; break;
+	case 601: return 399; break;
+	case 603: return 400; break;
+	case 608: return 403; break;
+	case 611: return 404; break;
+	case 617: return 406; break;
+	case 616: return 407; break;
+	case 623: return 412; break;
+	case 626: return 413; break;
+	case 643: return 425; break;
+	case 648: return 430; break;
+	case 650: return 433; break;
+	case 641: return 434; break;
+	case 658: return 439; break;
+	case 454: return 452; break;
+	case 457: return 455; break;
+	case 460: return 458; break;
+	case 499: return 497; break;
+	case 414: return 544; break;
+	case 410: return 573; break;
+	case 384: return 579; break;
+	case 649: return 580; break;
+	case 652: return 581; break;
 	}
 	return c;
 }
