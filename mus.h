@@ -392,9 +392,10 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
 }
 
 // did this manually because C standards suck
-// https://en.wikipedia.org/wiki/List_of_Unicode_characters
-// last updated 16 September 2023, covers 0 -> 3583
+// last updated 16 September 2023, covers 0 -> 6313
 // heavily in progress
+// https://en.wikipedia.org/wiki/List_of_Unicode_characters
+// https://www.ssec.wisc.edu/~tomw/java/unicode.html
 
 MUSDEF char mus_char_to_lowercase(char c) {
 	if (c >= 65 && c <= 90) c += 32;
@@ -456,6 +457,10 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 	// armenian
 		(
 			(c >= 0x0530 && c <= 0x0558)
+		) ||
+	// georgian
+		(
+			(c >= 0x10A0 && c <= 0x10CF)
 		)
 	) {
 		return c + 48;
@@ -566,6 +571,10 @@ MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
 	// armenian
 		(
 			(c >= (0x0530+48) && c <= (0x0558+48))
+		) ||
+	// georgian
+		(
+			(c >= (0x10A0+48) && c <= (0x10CF+48))
 		)
 	) {
 		return c - 48;
