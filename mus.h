@@ -77,7 +77,10 @@ MUSDEF mustring mus_string_w_insert(mustring str, wchar_m* insert, size_m i);
 MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size_m beg, size_m end);
 MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* replace, size_m beg, size_m end);
 
-/* character uppercase/lowercase */
+/* uppercase/lowercase */
+
+MUSDEF mustring mus_string_to_lowercase(mustring str, size_m beg, size_m end);
+MUSDEF mustring mus_string_to_uppercase(mustring str, size_m beg, size_m end);
 
 MUSDEF char 	mus_char_to_lowercase(char c);
 MUSDEF wchar_m 	mus_wchar_to_lowercase(wchar_m c);
@@ -389,6 +392,27 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
     }
     str.len = mus_wstrlen(str.ws);
     return str;
+}
+
+MUSDEF mustring mus_string_to_lowercase(mustring str, size_m beg, size_m end) {
+	for (size_m i = beg; i < str.len && i < end + 1; i++) {
+		if (str.type == MUS_STRING_TYPE_CHAR) {
+			str.s[i] = mus_char_to_lowercase(str.s[i]);
+		} else {
+			str.ws[i] = mus_wchar_to_lowercase(str.ws[i]);
+		}
+	}
+	return str;
+}
+MUSDEF mustring mus_string_to_uppercase(mustring str, size_m beg, size_m end) {
+	for (size_m i = beg; i < str.len && i < end + 1; i++) {
+		if (str.type == MUS_STRING_TYPE_CHAR) {
+			str.s[i] = mus_char_to_uppercase(str.s[i]);
+		} else {
+			str.ws[i] = mus_wchar_to_uppercase(str.ws[i]);
+		}
+	}
+	return str;
 }
 
 // did this manually because C standards suck
