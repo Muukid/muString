@@ -393,7 +393,7 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
 
 // did this manually because C standards suck
 // https://en.wikipedia.org/wiki/List_of_Unicode_characters
-// last updated 16 September 2023, covers 0 -> 1279
+// last updated 16 September 2023, covers 0 -> 3583
 // heavily in progress
 
 MUSDEF char mus_char_to_lowercase(char c) {
@@ -438,7 +438,9 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 			(c >= 0x0460 && c <= 0x0480 && c % 2 == 0) ||
 			(c >= 0x048A && c <= 0x04BE && c % 2 == 0) ||
 			(c >= 0x04C1 && c <= 0x04CD && c % 2 != 0) ||
-			(c >= 0x04D0 && c <= 0x04FE && c % 2 == 0)
+			(c >= 0x04D0 && c <= 0x04FE && c % 2 == 0) ||
+			// cyrillic supplement
+			(c >= 0x0500 && c <= 0x052E && c % 2 == 0)
 		)
 	) {
 		c++;
@@ -450,6 +452,13 @@ MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c) {
 		)
 	) {
 		return c + 80;
+	} else if (
+	// armenian
+		(
+			(c >= 0x0530 && c <= 0x0558)
+		)
+	) {
+		return c + 48;
 	}
 	switch (c) {
 	default: break;
@@ -539,7 +548,9 @@ MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
 			(c >= 0x0461 && c <= 0x0481 && c % 2 != 0) ||
 			(c >= 0x048B && c <= 0x04BF && c % 2 != 0) ||
 			(c >= 0x04C2 && c <= 0x04CE && c % 2 == 0) ||
-			(c >= 0x04D1 && c <= 0x04FF && c % 2 != 0)
+			(c >= 0x04D1 && c <= 0x04FF && c % 2 != 0) ||
+			// cyrillic supplement
+			(c >= 0x0501 && c <= 0x052F && c % 2 != 0)
 		)
 	) {
 		c--;
@@ -551,6 +562,13 @@ MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c) {
 		)
 	) {
 		return c - 80;
+	} else if (
+	// armenian
+		(
+			(c >= (0x0530+48) && c <= (0x0558+48))
+		)
+	) {
+		return c - 48;
 	}
 	switch (c) {
 	default: break;
