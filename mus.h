@@ -175,22 +175,12 @@ MUSDEF wchar_m* mus_float_to_wstring    (double n, size_m max_decimals);
     #endif
 #endif
 
-#if !defined(mus_sprintf)  || \
-    !defined(mus_snprintf) || \
-    !defined(mus_swprintf)
+#if !defined(mus_snprintf)
 
     #include <stdio.h>
 
-    #ifndef mus_sprintf
-        #define mus_sprintf sprintf
-    #endif
-
     #ifndef mus_snprintf
         #define mus_snprintf snprintf
-    #endif
-
-    #ifndef mus_swprintf
-        #define mus_swprintf swprintf
     #endif
 
 #endif
