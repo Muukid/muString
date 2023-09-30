@@ -75,6 +75,8 @@ MUSDEF mustring mus_string_insert(mustring str, char* insert, size_m i);
 MUSDEF mustring mus_string_w_insert(mustring str, wchar_m* insert, size_m i);
 MUSDEF mustring mus_string_insert_integer(mustring str, size_m n, size_m i);
 MUSDEF mustring mus_string_w_insert_integer(mustring str, size_m n, size_m i);
+MUSDEF mustring mus_string_insert_float(mustring str, double n, size_m max_decimals, size_m i);
+MUSDEF mustring mus_string_w_insert_float(mustring str, double n, size_m max_decimals, size_m i);
 
 MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size_m beg, size_m end);
 MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* replace, size_m beg, size_m end);
@@ -98,6 +100,8 @@ MUSDEF MUS_BOOL mus_wchar_is_uppercase(wchar_m c);
 
 MUSDEF char*    mus_integer_to_string   (size_m n);
 MUSDEF wchar_m* mus_integer_to_wstring  (size_m n);
+MUSDEF char*    mus_float_to_string     (double n, size_m max_decimals);
+MUSDEF wchar_m* mus_float_to_wstring    (double n, size_m max_decimals);
 
 #ifdef __cplusplus
     }
@@ -156,7 +160,7 @@ MUSDEF wchar_m* mus_integer_to_wstring  (size_m n);
     #endif
 #endif
 
-#if !defined(mus_sprintf) || \
+#if !defined(mus_sprintf)  || \
     !defined(mus_swprintf)
 
     #include <stdio.h>
@@ -171,8 +175,10 @@ MUSDEF wchar_m* mus_integer_to_wstring  (size_m n);
 
 #endif
 
-#if !defined (mus_log10) || \
-    !defined (mus_ceil)
+#if !defined(mus_log10)  || \
+    !defined(mus_ceil)   || \
+    !defined(mus_pow)    || \
+    !defined(mus_roundf)
 
     #include <math.h>
 
@@ -182,6 +188,14 @@ MUSDEF wchar_m* mus_integer_to_wstring  (size_m n);
 
     #ifndef mus_ceil
         #define mus_ceil ceil
+    #endif
+
+    #ifndef mus_pow
+        #define mus_pow pow
+    #endif
+
+    #ifndef mus_roundf
+        #define mus_roundf roundf
     #endif
 
 #endif
@@ -375,13 +389,26 @@ MUSDEF mustring mus_string_w_insert(mustring str, wchar_m* insert, size_m i) {
 MUSDEF mustring mus_string_insert_integer(mustring str, size_m n, size_m i) {
     char* s = mus_integer_to_string(n);
     str = mus_string_insert(str, s, i);
-    free(s);
+    mus_free(s);
     return str;
 }
 MUSDEF mustring mus_string_w_insert_integer(mustring str, size_m n, size_m i) {
     wchar_m* s = mus_integer_to_wstring(n);
     str = mus_string_w_insert(str, s, i);
-    free(s);
+    mus_free(s);
+    return str;
+}
+
+MUSDEF mustring mus_string_insert_float(mustring str, double n, size_m max_decimals, size_m i) {
+    char* s = mus_float_to_string(n, max_decimals);
+    str = mus_string_insert(str, s, i);
+    mus_free(s);
+    return str;
+}
+MUSDEF mustring mus_string_w_insert_float(mustring str, double n, size_m max_decimals, size_m i) {
+    wchar_m* s = mus_float_to_wstring(n, max_decimals);
+    str = mus_string_w_insert(str, s, i);
+    mus_free(s);
     return str;
 }
 
@@ -791,7 +818,7 @@ MUSDEF char* mus_integer_to_string(size_m n) {
     size_m len = (size_m)((mus_ceil(mus_log10(n))+1));
     char* s = mus_malloc(len * sizeof(char));
     mus_sprintf(s, "%zu", n);
-    s[len-1] = '\0';
+    s[len-1] = 0;
     return s;
 }
 
@@ -799,6 +826,38 @@ MUSDEF wchar_m* mus_integer_to_wstring(size_m n) {
     size_m len = (size_m)((mus_ceil(mus_log10(n))+1));
     wchar_m* s = mus_malloc(len * sizeof(wchar_m));
     mus_swprintf(s, len, L"%zu", n);
+    s[len-1] = 0;
+    return s;
+}
+
+MUSDEF char* mus_float_to_string(double n, size_m max_decimals) {
+    size_m cn = (size_m)mus_roundf(n * (double)mus_pow((double)10.f, (double)max_decimals));
+    size_m len = (size_m)((mus_ceil(mus_log10(cn))+2));
+    char* s = mus_malloc(len * sizeof(char));
+    mus_sprintf(s, "%zu", cn);
+    for (size_m i = len - 1; i != 0; i--) {
+        if (len-2-max_decimals == i && i) {
+            s[i] = '.';
+        } else if (i > len-2-max_decimals) {
+            s[i] = s[i-1];
+        }
+    }
+    s[len-1] = 0;
+    return s;
+}
+
+MUSDEF wchar_m* mus_float_to_wstring(double n, size_m max_decimals) {
+    size_m cn = (size_m)mus_roundf(n * (double)mus_pow((double)10.f, (double)max_decimals));
+    size_m len = (size_m)((mus_ceil(mus_log10(cn))+2));
+    wchar_m* s = mus_malloc(len * sizeof(wchar_m));
+    mus_swprintf(s, len, L"%zu", cn);
+    for (size_m i = len - 1; i != 0; i--) {
+        if (len-2-max_decimals == i && i) {
+            s[i] = L'.';
+        } else if (i > len-2-max_decimals) {
+            s[i] = s[i-1];
+        }
+    }
     s[len-1] = 0;
     return s;
 }
