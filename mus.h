@@ -176,12 +176,17 @@ MUSDEF wchar_m* mus_float_to_wstring    (double n, size_m max_decimals);
 #endif
 
 #if !defined(mus_sprintf)  || \
+    !defined(mus_snprintf) || \
     !defined(mus_swprintf)
 
     #include <stdio.h>
 
     #ifndef mus_sprintf
         #define mus_sprintf sprintf
+    #endif
+
+    #ifndef mus_snprintf
+        #define mus_snprintf snprintf
     #endif
 
     #ifndef mus_swprintf
@@ -837,58 +842,45 @@ MUSDEF MUS_BOOL mus_wchar_is_uppercase(wchar_m c) {
     return c != mus_wchar_to_lowercase(c);
 }
 
-// https://stackoverflow.com/questions/8257714/how-can-i-convert-an-int-to-a-string-in-c
-
 MUSDEF char* mus_integer_to_string(int64_m n) {
-    size_m len = (size_m)((mus_ceil(mus_log10(mus_abs(n)))+1));
-    if (n < 0) len++;
+    size_m len = mus_snprintf(0, 0, "%ld", n) + 1;
     char* s = mus_malloc(len * sizeof(char));
-    mus_sprintf(s, "%ld", n);
+    mus_snprintf(s, len, "%ld", n);
     s[len-1] = 0;
     return s;
 }
 
+// would like to not have to convert here, but snwprintf isn't standard
 MUSDEF wchar_m* mus_integer_to_wstring(int64_m n) {
-    size_m len = (size_m)((mus_ceil(mus_log10(mus_abs(n)))+1));
-    if (n < 0) len++;
-    wchar_m* s = mus_malloc(len * sizeof(wchar_m));
-    mus_swprintf(s, len, L"%ld", n);
-    s[len-1] = 0;
-    return s;
+    char* s = mus_integer_to_string(n);
+    size_m len = mus_char_string_to_wchar_m_size(s);
+    // not sure why i have to do this rn, i'll fix later
+    len++;
+    wchar_m* ws = mus_malloc(len * sizeof(wchar_m));
+    mus_char_string_to_wchar_m_string(ws, s, len);
+    mus_free(s);
+    return ws;
 }
 
 MUSDEF char* mus_float_to_string(double n, size_m max_decimals) {
-    int64_m cn = (int64_m)mus_roundf(n * (double)mus_pow((double)10.f, (double)max_decimals));
-    size_m len = (size_m)((mus_ceil(mus_log10(mus_fabs(cn)))+2));
-    if (n < 0.0f) len++;
+    size_m len = mus_snprintf(0, 0, "%lf", n) + 1;
     char* s = mus_malloc(len * sizeof(char));
-    mus_sprintf(s, "%ld", cn);
-    for (size_m i = len - 1; i != 0; i--) {
-        if (len-2-max_decimals == i && i) {
-            s[i] = '.';
-        } else if (i > len-2-max_decimals) {
-            s[i] = s[i-1];
-        }
-    }
+    if (max_decimals >= 10) max_decimals = 9;
+    char format[6] = "%0.0lf";
+    format[3] = '0' + max_decimals;
+    mus_snprintf(s, len, format, n);
     s[len-1] = 0;
     return s;
 }
 
 MUSDEF wchar_m* mus_float_to_wstring(double n, size_m max_decimals) {
-    int64_m cn = (int64_m)mus_roundf(n * (double)mus_pow((double)10.f, (double)max_decimals));
-    size_m len = (size_m)((mus_ceil(mus_log10(mus_fabs(cn)))+2));
-    if (n < 0.0f) len++;
-    wchar_m* s = mus_malloc(len * sizeof(wchar_m));
-    mus_swprintf(s, len, L"%ld", cn);
-    for (size_m i = len - 1; i != 0; i--) {
-        if (len-2-max_decimals == i && i) {
-            s[i] = L'.';
-        } else if (i > len-2-max_decimals) {
-            s[i] = s[i-1];
-        }
-    }
-    s[len-1] = 0;
-    return s;
+    char* s = mus_float_to_string(n, max_decimals);
+    size_m len = mus_char_string_to_wchar_m_size(s);
+    len++;
+    wchar_m* ws = mus_malloc(len * sizeof(wchar_m));
+    mus_char_string_to_wchar_m_string(ws, s, len);
+    mus_free(s);
+    return ws;
 }
 
 #ifdef __cplusplus
