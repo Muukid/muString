@@ -11,7 +11,7 @@ More explicit license information at the end of file.
 #define MUS_H
 
 #define MUS_VERSION_MAJOR 2
-#define MUS_VERSION_MINOR 0
+#define MUS_VERSION_MINOR 1
 #define MUS_VERSION_PATCH 0
 
 #ifdef __cplusplus
