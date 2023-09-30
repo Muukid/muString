@@ -73,6 +73,8 @@ MUSDEF mustring mus_string_delete(mustring str, size_m beg, size_m end);
 
 MUSDEF mustring mus_string_insert(mustring str, char* insert, size_m i);
 MUSDEF mustring mus_string_w_insert(mustring str, wchar_m* insert, size_m i);
+MUSDEF mustring mus_string_insert_integer(mustring str, size_m n, size_m i);
+MUSDEF mustring mus_string_w_insert_integer(mustring str, size_m n, size_m i);
 
 MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size_m beg, size_m end);
 MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* replace, size_m beg, size_m end);
@@ -94,8 +96,8 @@ MUSDEF MUS_BOOL mus_wchar_is_uppercase(wchar_m c);
 
 /* numbers */
 
-MUSDEF char*    mus_number_to_string    (size_m n);
-MUSDEF wchar_m* mus_number_to_wstring   (size_m n);
+MUSDEF char*    mus_integer_to_string   (size_m n);
+MUSDEF wchar_m* mus_integer_to_wstring  (size_m n);
 
 #ifdef __cplusplus
     }
@@ -367,6 +369,19 @@ MUSDEF mustring mus_string_w_insert(mustring str, wchar_m* insert, size_m i) {
         }
     }
     str.len += insert_len;
+    return str;
+}
+
+MUSDEF mustring mus_string_insert_integer(mustring str, size_m n, size_m i) {
+    char* s = mus_integer_to_string(n);
+    str = mus_string_insert(str, s, i);
+    free(s);
+    return str;
+}
+MUSDEF mustring mus_string_w_insert_integer(mustring str, size_m n, size_m i) {
+    wchar_m* s = mus_integer_to_wstring(n);
+    str = mus_string_w_insert(str, s, i);
+    free(s);
     return str;
 }
 
@@ -772,7 +787,7 @@ MUSDEF MUS_BOOL mus_wchar_is_uppercase(wchar_m c) {
 
 // https://stackoverflow.com/questions/8257714/how-can-i-convert-an-int-to-a-string-in-c
 
-MUSDEF char* mus_number_to_string(size_m n) {
+MUSDEF char* mus_integer_to_string(size_m n) {
     size_m len = (size_m)((mus_ceil(mus_log10(n))+1));
     char* s = mus_malloc(len * sizeof(char));
     mus_sprintf(s, "%zu", n);
@@ -780,7 +795,7 @@ MUSDEF char* mus_number_to_string(size_m n) {
     return s;
 }
 
-MUSDEF wchar_m* mus_number_to_wstring(size_m n) {
+MUSDEF wchar_m* mus_integer_to_wstring(size_m n) {
     size_m len = (size_m)((mus_ceil(mus_log10(n))+1));
     wchar_m* s = mus_malloc(len * sizeof(wchar_m));
     mus_swprintf(s, len, L"%zu", n);
