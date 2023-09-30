@@ -94,7 +94,8 @@ MUSDEF MUS_BOOL mus_wchar_is_uppercase(wchar_m c);
 
 /* numbers */
 
-MUSDEF char*    mus_number_to_string(size_m n);
+MUSDEF char*    mus_number_to_string    (size_m n);
+MUSDEF wchar_m* mus_number_to_wstring   (size_m n);
 
 #ifdef __cplusplus
     }
@@ -153,11 +154,19 @@ MUSDEF char*    mus_number_to_string(size_m n);
     #endif
 #endif
 
-#if !defined(mus_sprintf)
+#if !defined(mus_sprintf) || \
+    !defined(mus_swprintf)
+
     #include <stdio.h>
+
     #ifndef mus_sprintf
         #define mus_sprintf sprintf
     #endif
+
+    #ifndef mus_swprintf
+        #define mus_swprintf swprintf
+    #endif
+
 #endif
 
 #if !defined (mus_log10) || \
@@ -768,6 +777,14 @@ MUSDEF char* mus_number_to_string(size_m n) {
     char* s = mus_malloc(len * sizeof(char));
     mus_sprintf(s, "%zu", n);
     s[len-1] = '\0';
+    return s;
+}
+
+MUSDEF wchar_m* mus_number_to_wstring(size_m n) {
+    size_m len = (size_m)((mus_ceil(mus_log10(n))+1));
+    wchar_m* s = mus_malloc(len * sizeof(wchar_m));
+    mus_swprintf(s, len, L"%zu", n);
+    s[len-1] = 0;
     return s;
 }
 
