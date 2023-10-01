@@ -64,48 +64,50 @@ typedef struct {
 
 MUSDEF size_m mus_string_strlen(mustring s);
 
-MUSDEF mustring mus_string_create(char* s);
-MUSDEF mustring mus_wide_string_create(wchar_m* ws);
+MUSDEF mustring mus_string_create (char* s);
+MUSDEF mustring mus_wstring_create(wchar_m* ws);
+
 MUSDEF mustring mus_string_destroy(mustring str);
 
 MUSDEF mustring mus_string_size_check(mustring str, size_m size);
 
 MUSDEF mustring mus_string_delete(mustring str, size_m beg, size_m end);
 
-MUSDEF mustring mus_string_insert           (mustring str, char* insert,    size_m i);
-MUSDEF mustring mus_string_w_insert         (mustring str, wchar_m* insert, size_m i);
+MUSDEF mustring mus_string_insert (mustring str, char* insert,    size_m i);
+MUSDEF mustring mus_wstring_insert(mustring str, wchar_m* insert, size_m i);
 
-MUSDEF mustring mus_string_insert_integer   (mustring str, int64_m n, size_m i);
-MUSDEF mustring mus_string_w_insert_integer (mustring str, int64_m n, size_m i);
+MUSDEF mustring mus_string_insert_integer (mustring str, int64_m n, size_m i);
+MUSDEF mustring mus_wstring_insert_integer(mustring str, int64_m n, size_m i);
 
-MUSDEF mustring mus_string_insert_float     (mustring str, double n, size_m max_decimals, size_m i);
-MUSDEF mustring mus_string_w_insert_float   (mustring str, double n, size_m max_decimals, size_m i);
+MUSDEF mustring mus_string_insert_float (mustring str, double n, size_m max_decimals, size_m i);
+MUSDEF mustring mus_wstring_insert_float(mustring str, double n, size_m max_decimals, size_m i);
 
-MUSDEF mustring mus_string_replace  (mustring str, char* find,    char* replace,    size_m beg, size_m end);
-MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* replace, size_m beg, size_m end);
+MUSDEF mustring mus_string_replace (mustring str, char* find,    char* replace,    size_m beg, size_m end);
+MUSDEF mustring mus_wstring_replace(mustring str, wchar_m* find, wchar_m* replace, size_m beg, size_m end);
 
 MUSDEF mustring mus_string_to_lowercase(mustring str, size_m beg, size_m end);
 MUSDEF mustring mus_string_to_uppercase(mustring str, size_m beg, size_m end);
 
 /* string */
 
-MUSDEF MUS_BOOL mus_here(char* str, char* check, size_m i);
-MUSDEF MUS_BOOL mus_w_here(wchar_m* str, wchar_m* check, size_m i);
-MUSDEF MUS_BOOL mus_has(char* str, char* find, size_m beg, size_m end);
-MUSDEF MUS_BOOL mus_w_has(wchar_m* str, wchar_m* find, size_m beg, size_m end);
+MUSDEF MUS_BOOL mus_here (char* str,    char* check,    size_m i);
+MUSDEF MUS_BOOL mus_where(wchar_m* str, wchar_m* check, size_m i);
+
+MUSDEF MUS_BOOL mus_has (char* str,    char* find,    size_m beg, size_m end);
+MUSDEF MUS_BOOL mus_whas(wchar_m* str, wchar_m* find, size_m beg, size_m end);
 
 /* character conversion */
 
-MUSDEF size_m mus_wchar_m_string_to_char_string(char* dest,     wchar_m* src,   size_m dest_size);
-MUSDEF size_m mus_char_string_to_wchar_m_string(wchar_m* dest,  char* src,      size_m dest_size);
+MUSDEF int mus_wstring_to_string(char* dest,    wchar_m* src, size_m dest_len);
+MUSDEF int mus_string_to_wstring(wchar_m* dest, char* src,    size_m dest_len);
 
 /* uppercase/lowercase */
 
-MUSDEF char     mus_char_to_lowercase (char c);
-MUSDEF wchar_m  mus_wchar_to_lowercase(wchar_m c);
+MUSDEF char    mus_char_to_lowercase (char c);
+MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c);
 
-MUSDEF char     mus_char_to_uppercase (char c);
-MUSDEF wchar_m  mus_wchar_to_uppercase(wchar_m c);
+MUSDEF char    mus_char_to_uppercase (char c);
+MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c);
 
 MUSDEF MUS_BOOL mus_char_is_lowercase (char c);
 MUSDEF MUS_BOOL mus_wchar_is_lowercase(wchar_m c);
@@ -115,11 +117,11 @@ MUSDEF MUS_BOOL mus_wchar_is_uppercase(wchar_m c);
 
 /* numbers */
 
-MUSDEF size_m   mus_integer_to_string   (int64_m n, char* dest,    size_m dest_size);
-MUSDEF size_m   mus_integer_to_wstring  (int64_m n, wchar_m* dest, size_m dest_size);
+MUSDEF int   mus_integer_to_string (int64_m n, char* dest,    size_m dest_len);
+MUSDEF int   mus_integer_to_wstring(int64_m n, wchar_m* dest, size_m dest_len);
 
-MUSDEF size_m   mus_float_to_string     (double n, size_m max_decimals, char* dest,    size_m dest_size);
-MUSDEF size_m   mus_float_to_wstring    (double n, size_m max_decimals, wchar_m* dest, size_m dest_size);
+MUSDEF int   mus_float_to_string (double n, size_m max_decimals, char* dest,    size_m dest_len);
+MUSDEF int   mus_float_to_wstring(double n, size_m max_decimals, wchar_m* dest, size_m dest_len);
 
 #ifdef __cplusplus
     }
@@ -190,13 +192,13 @@ MUSDEF size_m   mus_float_to_wstring    (double n, size_m max_decimals, wchar_m*
 
 // not sure if multi-byte state being null is fully safe
 
-MUSDEF size_m mus_wchar_m_string_to_char_string(char* dest, wchar_m* src, size_m dest_size) {
+MUSDEF int mus_wstring_to_string(char* dest, wchar_m* src, size_m dest_len) {
     if (dest == MUS_NULL) return (size_m)mus_wcsrtombs(MUS_NULL, (const wchar_m**)&src, 1, MUS_NULL);
-    return (size_m)mus_wcstombs(dest, src, dest_size);
+    return (size_m)mus_wcstombs(dest, src, dest_len);
 }
-MUSDEF size_m mus_char_string_to_wchar_m_string(wchar_m* dest, char* src, size_m dest_size) {
+MUSDEF int mus_string_to_wstring(wchar_m* dest, char* src, size_m dest_len) {
     if (dest == MUS_NULL) return (size_m)mus_mbsrtowcs(MUS_NULL, (const char**)&src, 1, MUS_NULL);
-    return (size_m)mus_mbstowcs(dest, src, dest_size);
+    return (size_m)mus_mbstowcs(dest, src, dest_len);
 }
 
 MUSDEF size_m mus_string_strlen(mustring s) {
@@ -216,7 +218,7 @@ MUSDEF mustring mus_string_create(char* s) {
     str.s[str.len] = '\0';
     return str;
 }
-MUSDEF mustring mus_wide_string_create(wchar_m* ws) {
+MUSDEF mustring mus_wstring_create(wchar_m* ws) {
     mustring str;
     str.len = mus_wstrlen(ws);
     str.size = (sizeof(wchar_m) * (str.len)) * 2;
@@ -265,7 +267,7 @@ MUSDEF MUS_BOOL mus_here(char* str, char* check, size_m i) {
     }
     return MUS_TRUE;
 }
-MUSDEF MUS_BOOL mus_w_here(wchar_m* str, wchar_m* check, size_m i) {
+MUSDEF MUS_BOOL mus_where(wchar_m* str, wchar_m* check, size_m i) {
     if (str[i] != check[0]) return MUS_FALSE;
     size_m check_len = mus_wstrlen(check);
     size_m str_len = mus_wstrlen(str);
@@ -288,7 +290,7 @@ MUSDEF MUS_BOOL mus_has(char* str, char* find, size_m beg, size_m end) {
     }
     return MUS_FALSE;
 }
-MUSDEF MUS_BOOL mus_w_has(wchar_m* str, wchar_m* find, size_m beg, size_m end) {
+MUSDEF MUS_BOOL mus_whas(wchar_m* str, wchar_m* find, size_m beg, size_m end) {
     size_m find_len = mus_wstrlen(find);
     for (size_m i = beg; i + find_len < end; i++) {
         MUS_BOOL found = MUS_TRUE;
@@ -314,10 +316,10 @@ MUSDEF mustring mus_string_delete(mustring str, size_m beg, size_m end) {
 
 MUSDEF mustring mus_string_insert(mustring str, char* insert, size_m i) {
     if (str.type == MUS_STRING_TYPE_WCHAR) {
-        size_m size = mus_char_string_to_wchar_m_string(MUS_NULL, insert, 0);
+        size_m size = mus_string_to_wstring(MUS_NULL, insert, 0);
         wchar_m* insert_w = mus_malloc(size * sizeof(wchar_m));
-        mus_char_string_to_wchar_m_string(insert_w, insert, size);
-        str = mus_string_w_insert(str, insert_w, i);
+        mus_string_to_wstring(insert_w, insert, size);
+        str = mus_wstring_insert(str, insert_w, i);
         mus_free(insert_w);
         return str;
     }
@@ -340,11 +342,11 @@ MUSDEF mustring mus_string_insert(mustring str, char* insert, size_m i) {
     str.len += insert_len;
     return str;
 }
-MUSDEF mustring mus_string_w_insert(mustring str, wchar_m* insert, size_m i) {
+MUSDEF mustring mus_wstring_insert(mustring str, wchar_m* insert, size_m i) {
     if (str.type == MUS_STRING_TYPE_CHAR) {
-        size_m size = mus_wchar_m_string_to_char_string(MUS_NULL, insert, 0);
+        size_m size = mus_wstring_to_string(MUS_NULL, insert, 0);
         char* insert_c = mus_malloc(size * sizeof(char));
-        mus_wchar_m_string_to_char_string(insert_c, insert, size);
+        mus_wstring_to_string(insert_c, insert, size);
         str = mus_string_insert(str, insert_c, i);
         mus_free(insert_c);
         return str;
@@ -379,13 +381,13 @@ MUSDEF mustring mus_string_insert_integer(mustring str, int64_m n, size_m i) {
     mus_free(s);
     return str;
 }
-MUSDEF mustring mus_string_w_insert_integer(mustring str, int64_m n, size_m i) {
+MUSDEF mustring mus_wstring_insert_integer(mustring str, int64_m n, size_m i) {
     size_m len = mus_integer_to_wstring(n, MUS_NULL, 0);
     len++;
     wchar_m* s = mus_malloc(len * sizeof(wchar_m));
     mus_integer_to_wstring(n, s, len);
     s[len-1] = 0;
-    str = mus_string_w_insert(str, s, i);
+    str = mus_wstring_insert(str, s, i);
     mus_free(s);
     return str;
 }
@@ -400,26 +402,26 @@ MUSDEF mustring mus_string_insert_float(mustring str, double n, size_m max_decim
     mus_free(s);
     return str;
 }
-MUSDEF mustring mus_string_w_insert_float(mustring str, double n, size_m max_decimals, size_m i) {
+MUSDEF mustring mus_wstring_insert_float(mustring str, double n, size_m max_decimals, size_m i) {
     size_m len = mus_float_to_wstring(n, max_decimals, MUS_NULL, 0);
     len++;
     wchar_m* s = mus_malloc(len * sizeof(wchar_m));
     mus_float_to_wstring(n, max_decimals, s, len);
     s[len-1] = 0;
-    str = mus_string_w_insert(str, s, i);
+    str = mus_wstring_insert(str, s, i);
     mus_free(s);
     return str;
 }
 
 MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size_m beg, size_m end) {
     if (str.type == MUS_STRING_TYPE_WCHAR) {
-        size_m find_size = mus_char_string_to_wchar_m_string(MUS_NULL, find, 0);
-        size_m replace_size = mus_char_string_to_wchar_m_string(MUS_NULL, replace, 0);
+        size_m find_size = mus_string_to_wstring(MUS_NULL, find, 0);
+        size_m replace_size = mus_string_to_wstring(MUS_NULL, replace, 0);
         wchar_m* find_w = mus_malloc(find_size * sizeof(wchar_m));
         wchar_m* replace_w = mus_malloc(replace_size * sizeof(wchar_m));
-        mus_char_string_to_wchar_m_string(find_w, find, find_size);
-        mus_char_string_to_wchar_m_string(replace_w, replace, replace_size);
-        str = mus_string_w_replace(str, find_w, replace_w, beg, end);
+        mus_string_to_wstring(find_w, find, find_size);
+        mus_string_to_wstring(replace_w, replace, replace_size);
+        str = mus_wstring_replace(str, find_w, replace_w, beg, end);
         mus_free(find_w);
         mus_free(replace_w);
         return str;
@@ -440,14 +442,14 @@ MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size
     str.len = mus_strlen(str.s);
     return str;
 }
-MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* replace, size_m beg, size_m end) {
+MUSDEF mustring mus_wstring_replace(mustring str, wchar_m* find, wchar_m* replace, size_m beg, size_m end) {
     if (str.type == MUS_STRING_TYPE_CHAR) {
-        size_m find_size = mus_wchar_m_string_to_char_string(MUS_NULL, find, 0);
-        size_m replace_size = mus_wchar_m_string_to_char_string(MUS_NULL, replace, 0);
+        size_m find_size = mus_wstring_to_string(MUS_NULL, find, 0);
+        size_m replace_size = mus_wstring_to_string(MUS_NULL, replace, 0);
         char* find_c = mus_malloc(find_size * sizeof(char));
         char* replace_c = mus_malloc(replace_size * sizeof(char));
-        mus_wchar_m_string_to_char_string(find_c, find, find_size);
-        mus_wchar_m_string_to_char_string(replace_c, replace, replace_size);
+        mus_wstring_to_string(find_c, find, find_size);
+        mus_wstring_to_string(replace_c, replace, replace_size);
         str = mus_string_replace(str, find_c, replace_c, beg, end);
         mus_free(find_c);
         mus_free(replace_c);
@@ -458,10 +460,10 @@ MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* repla
     size_m len_dif = find_len - replace_len;
     if (replace_len > find_len) len_dif = replace_len - find_len;
     for (size_m i = beg; i < end + 1 && i < mus_string_strlen(str); i++) {
-        if (mus_w_here(str.ws, find, i) == MUS_TRUE) {
+        if (mus_where(str.ws, find, i) == MUS_TRUE) {
             str = mus_string_delete(str, i, i + find_len);
             if (replace_len > 0) {
-                str = mus_string_w_insert(str, replace, i);
+                str = mus_wstring_insert(str, replace, i);
             }
             end -= len_dif;
         }
@@ -811,38 +813,38 @@ MUSDEF MUS_BOOL mus_wchar_is_uppercase(wchar_m c) {
     return c != mus_wchar_to_lowercase(c);
 }
 
-MUSDEF size_m mus_integer_to_string(int64_m n, char* dest, size_m dest_size) {
+MUSDEF int mus_integer_to_string(int64_m n, char* dest, size_m dest_len) {
     if (dest == MUS_NULL) return mus_snprintf(MUS_NULL, 0, "%ld", n);
-    return mus_snprintf(dest, dest_size, "%ld", n);
+    return mus_snprintf(dest, dest_len, "%ld", n);
 }
 
 // would like to not have to convert here, but snwprintf isn't standard
-MUSDEF size_m mus_integer_to_wstring(int64_m n, wchar_m* dest, size_m dest_size) {
+MUSDEF int mus_integer_to_wstring(int64_m n, wchar_m* dest, size_m dest_len) {
     if (dest == MUS_NULL) return mus_snprintf(MUS_NULL, 0, "%ld", n);
     size_m len = mus_integer_to_string(n, MUS_NULL, 0);
     char* s = mus_malloc(len * sizeof(char));
     mus_integer_to_string(n, s, len);
-    for (size_m i = 0; i < dest_size; i++) {
+    for (size_m i = 0; i < dest_len; i++) {
         dest[i] = (wchar_m)s[i];
     }
     free(s);
     return 0;
 }
 
-MUSDEF size_m mus_float_to_string(double n, size_m max_decimals, char* dest, size_m dest_size) {
+MUSDEF int mus_float_to_string(double n, size_m max_decimals, char* dest, size_m dest_len) {
     if (max_decimals >= 10) max_decimals = 9;
     char format[6] = "%0.0lf";
     format[3] = '0' + max_decimals;
     if (dest == MUS_NULL) return mus_snprintf(MUS_NULL, 0, format, n);
-    return mus_snprintf(dest, dest_size, format, n);
+    return mus_snprintf(dest, dest_len, format, n);
 }
 
-MUSDEF size_m mus_float_to_wstring(double n, size_m max_decimals, wchar_m* dest, size_m dest_size) {
+MUSDEF int mus_float_to_wstring(double n, size_m max_decimals, wchar_m* dest, size_m dest_len) {
     size_m len = mus_float_to_string(n, max_decimals, MUS_NULL, 0);
     if (dest == MUS_NULL) return len;
     char* s = mus_malloc(len * sizeof(char));
     mus_float_to_string(n, max_decimals, s, len);
-    for (size_m i = 0; i < dest_size; i++) {
+    for (size_m i = 0; i < dest_len; i++) {
         dest[i] = (wchar_m)s[i];
     }
     free(s);
