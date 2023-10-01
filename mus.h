@@ -12,7 +12,7 @@ More explicit license information at the end of file.
 
 #define MUS_VERSION_MAJOR 3
 #define MUS_VERSION_MINOR 0
-#define MUS_VERSION_PATCH 0
+#define MUS_VERSION_PATCH 1
 
 #ifdef __cplusplus
     extern "C" {
@@ -814,7 +814,7 @@ MUSDEF MUS_BOOL mus_wchar_is_uppercase(wchar_m c) {
 
 MUSDEF int mus_integer_to_string(int64_m n, char* dest, size_m dest_len) {
     if (dest == MUS_NULL) return mus_snprintf(MUS_NULL, 0, "%ld", n);
-    return mus_snprintf(dest, dest_len, "%ld", n);
+    return mus_snprintf(dest, dest_len+1, "%ld", n);
 }
 
 // would like to not have to convert here, but snwprintf isn't standard
@@ -835,7 +835,7 @@ MUSDEF int mus_float_to_string(double n, size_m max_decimals, char* dest, size_m
     char format[6] = "%0.0lf";
     format[3] = '0' + max_decimals;
     if (dest == MUS_NULL) return mus_snprintf(MUS_NULL, 0, format, n);
-    return mus_snprintf(dest, dest_len, format, n);
+    return mus_snprintf(dest, dest_len+1, format, n);
 }
 
 MUSDEF int mus_float_to_wstring(double n, size_m max_decimals, wchar_m* dest, size_m dest_len) {
