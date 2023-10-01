@@ -23,6 +23,8 @@ Whether or not mus defines its functions as static or extern can be controlled b
 ## Defines
 There are a few defines that mus uses that rely on the C standard library to define themselves, all of which can be defined by the user before defining `MUS_IMPLEMENTATION` if they wish to customize them. These are:
 
+`int64_m`: equivalent to `int64_t`, uses `stdint.h` for definition.
+
 `size_m` : equivalent to `size_t`, uses `stddef.h` for definition.
 
 `wchar_m`: equivalent to `wchar_t`, uses `wchar.h` for definition.
@@ -45,19 +47,9 @@ There are a few defines that mus uses that rely on the C standard library to def
 
 `mus_wstrlen`: equivalent to `wcslen`, uses `wchar.h` for definition.
 
-`mus_sprintf`: equivalent to `sprintf`, uses `stdio.h` for definition.
+`mus_snprintf`: equivalent to `snprintf`, uses `stdio.h` for definition.
 
-`mus_swprintf`: equivalent to `swprintf`, uses `stdio.h` for definition.
-
-`mus_log10`: equivalent to `log10`, uses `math.h` for definition.
-
-`mus_ceil`: equivalent to `ceil`, uses `math.h` for definition.
-
-`mus_pow`: equivalent to `pow`, uses `math.h` for definition.
-
-`mus_roundf`: equivalent to `roundf`, uses `math.h` for definition.
-
-Note that if all definitions for a C standard header file are defined before `MUS_IMPLEMENTATION`, it will not be included. For example, if `mus_sprintf` and `mus_swprintf` were both defined beforehand, `stdio.h` will not be included.
+Note that if all definitions for a C standard header file are defined before `MUS_IMPLEMENTATION`, it will not be included. For example, if `mus_snprintf` was defined beforehand, `stdio.h` will not be included, as no definitions would be reliant on `stdio.h` being included.
 
 # Enumerators
 
@@ -110,26 +102,26 @@ All it does is return `s.len`, because `mustring` internally stores the length o
 
 If you have a raw `char` pointer string to check the length of, you can use `mus_strlen`, which is simply a define for `strlen` provided in `string.h` unless defined otherwise by the user.
 
-If you have a raw `wchar_m` pointer string to check the length of, you can use `mus_wstrlen`, which is simply a define for `wcslen` provided in `wchar_m.h` unless defined otherwise by the user.
+If you have a raw `wchar_m` pointer string to check the length of, you can use `mus_wstrlen`, which is simply a define for `wcslen` provided in `wchar.h` unless defined otherwise by the user.
 
 ## String creation
 There are two functions to create a string. If you'd like to create a string that uses `char` for its datatype, use `mus_string_create`, defined below in `MUS_H`:
 
 ```
-MUSDEF mustring mus_string_create(char* s);
+MUSDEF mustring mus_string_create (char* s);
 ```
 
 The function takes in a preexisting `char` pointer string and returns a valid `mustring` struct which can then be used with other functions.
 
-If you'd like to create a string that uses `wchar_m` for its datatype, use `mus_wide_string_create`, defined below in `MUS_H`:
+If you'd like to create a string that uses `wchar_m` for its datatype, use `mus_wstring_create`, defined below in `MUS_H`:
 
 ```
-MUSDEF mustring mus_wide_string_create(wchar_m* ws);
+MUSDEF mustring mus_wstring_create(wchar_m* ws);
 ```
 
 The function takes in a preexisting `wchar_m` pointer and returns a valid `mustring` struct which can then be used with other functions.
 
-Note that if you use `mus_string_create`, the variable `s` of type `char*` is used to store the string, whilst if you use `mus_wide_string_create`, the variable `ws` of type `wchar_m*` is used.
+Note that if you use `mus_string_create`, the variable `s` of type `char*` is used to store the string, whilst if you use `mus_wstring_create`, the variable `ws` of type `wchar_m*` is used.
 
 ## String destruction
 To destroy a string, the function `mus_string_destroy` is used, defined below in `MUS_H`:
@@ -159,11 +151,11 @@ MUSDEF mustring mus_string_delete(mustring str, size_m beg, size_m end);
 Deletes all characters starting at index `beg` and ending at index `end`. This function can be used for both `char` and `wchar_m` strings.
 
 ## Inserting a string into another
-There are two functions used for inserting one string into another, `mus_string_insert` for `char` strings and `mus_string_w_insert` for `wchar_m` strings, both defined below in `MUS_H`:
+There are two functions used for inserting one string into another, `mus_string_insert` for `char` strings and `mus_wstring_insert` for `wchar_m` strings, both defined below in `MUS_H`:
 
 ```
-MUSDEF mustring mus_string_insert(mustring str, char* insert, size_m i);
-MUSDEF mustring mus_string_w_insert(mustring str, wchar_m* insert, size_m i);
+MUSDEF mustring mus_string_insert (mustring str, char* insert,    size_m i);
+MUSDEF mustring mus_wstring_insert(mustring str, wchar_m* insert, size_m i);
 ```
 
 Inserts `insert` into the string contents of `str` at index `i`.
@@ -171,11 +163,11 @@ Inserts `insert` into the string contents of `str` at index `i`.
 Note that `str` doesn't need to match the character type of insertion, meaning that you can use `mus_string_insert` on a wide-character string and vice versa, but it's not recommended, as it can be slow.
 
 ## Inserting an integer into a string
-There are two functions used for inserting an integer into a string, `mus_string_insert_integer` for `char` strings and `mus_string_w_insert_integer` for `wchar_m` strings, both defined below in `MUS_H`:
+There are two functions used for inserting an integer into a string, `mus_string_insert_integer` for `char` strings and `mus_wstring_insert_integer` for `wchar_m` strings, both defined below in `MUS_H`:
 
 ```
-MUSDEF mustring mus_string_insert_integer(mustring str, size_m n, size_m i);
-MUSDEF mustring mus_string_w_insert_integer(mustring str, size_m n, size_m i);
+MUSDEF mustring mus_string_insert_integer (mustring str, int64_m n, size_m i);
+MUSDEF mustring mus_wstring_insert_integer(mustring str, int64_m n, size_m i);
 ```
 
 Converts `n` to a string and inserts it into the string contents of `str` at index `i`.
@@ -183,11 +175,11 @@ Converts `n` to a string and inserts it into the string contents of `str` at ind
 Note that these functions are dependent on `mus_integer_to_string` and `mus_integer_to_wstring`, so limitations on `n` for those functions apply.
 
 ## Inserting a floating point number into a string
-There are two functions used for inserting a floating point number into a string, `mus_string_insert_float` for `char` strings and `mus_string_w_insert_float` for `wchar_m` strings, both defined below in `MUS_H`:
+There are two functions used for inserting a floating point number into a string, `mus_string_insert_float` for `char` strings and `mus_wstring_insert_float` for `wchar_m` strings, both defined below in `MUS_H`:
 
 ```
-MUSDEF mustring mus_string_insert_float(mustring str, double n, size_m max_decimals, size_m i);
-MUSDEF mustring mus_string_w_insert_float(mustring str, double n, size_m max_decimals, size_m i);
+MUSDEF mustring mus_string_insert_float (mustring str, double n, size_m max_decimals, size_m i);
+MUSDEF mustring mus_wstring_insert_float(mustring str, double n, size_m max_decimals, size_m i);
 ```
 
 Converts `n` to a string, rounding it to `max_decimals` decimals, and inserts it into the string contents of `str` at index `i`.
@@ -195,11 +187,11 @@ Converts `n` to a string, rounding it to `max_decimals` decimals, and inserts it
 Note that these functions are dependent on `mus_float_to_string` and `mus_float_to_wstring`, so limitations on `n` and `max_decimals` for those functions apply.
 
 ## Replacing all instances of a string with another
-There are two functions for replacing all instances of a string with another, `mus_string_replace` for `char` strings and `mus_string_w_replace` for `wchar_m` strings, both defined below in `MUS_H`:
+There are two functions for replacing all instances of a string with another, `mus_string_replace` for `char` strings and `mus_wstring_replace` for `wchar_m` strings, both defined below in `MUS_H`:
 
 ```
-MUSDEF mustring mus_string_replace(mustring str, char* find, char* replace, size_m beg, size_m end);
-MUSDEF mustring mus_string_w_replace(mustring str, wchar_m* find, wchar_m* replace, size_m beg, size_m end);
+MUSDEF mustring mus_string_replace (mustring str, char* find,    char* replace,    size_m beg, size_m end);
+MUSDEF mustring mus_wstring_replace(mustring str, wchar_m* find, wchar_m* replace, size_m beg, size_m end);
 ```
 
 Finds all instances of `find` within the string contents of `str` and replaces it with `replace`, scanning from index `beg` to `end` within the string contents of `str`.
@@ -214,7 +206,7 @@ MUSDEF mustring mus_string_to_lowercase(mustring str, size_m beg, size_m end);
 MUSDEF mustring mus_string_to_uppercase(mustring str, size_m beg, size_m end);
 ```
 
-Converts all characters from index `beg` to index `end` to uppercase/lowercase.
+Converts all characters from index `beg` to index `end` to lowercase/uppercase.
 
 Note that these functions can be called with any type of `mustring`.
 
@@ -223,21 +215,21 @@ Note that these functions have reliance on `mus_char_to_lowercase`, `mus_wchar_t
 # String functions
 
 ## Here check
-To check if a given string's contents is at a given point in another string, you can use the two functions `mus_here` and `mus_w_here` for `char` strings and `wchar_m` strings respectively, both defined below in `MUS_H`:
+To check if a given string's contents is at a given point in another string, you can use the two functions `mus_here` and `mus_where` for `char` strings and `wchar_m` strings respectively, both defined below in `MUS_H`:
 
 ```
-MUSDEF MUS_BOOL mus_here(char* str, char* check, size_m i);
-MUSDEF MUS_BOOL mus_w_here(wchar_m* str, wchar_m* check, size_m i);
+MUSDEF MUS_BOOL mus_here (char* str,    char* check,    size_m i);
+MUSDEF MUS_BOOL mus_where(wchar_m* str, wchar_m* check, size_m i);
 ```
 
 Returns `MUS_TRUE` if all characters at index `i` in `str` match the characters contained in `check`.
 
 ## Has check
-To check if a given string's contents are contained somewhere within another string, you can use the two functions `mus_has` and `mus_w_has` for `char` and `wchar_m` strings respectively, both defined below in `MUS_H`:
+To check if a given string's contents are contained somewhere within another string, you can use the two functions `mus_has` and `mus_whas` for `char` and `wchar_m` strings respectively, both defined below in `MUS_H`:
 
 ```
-MUSDEF MUS_BOOL mus_has(char* str, char* find, size_m beg, size_m end);
-MUSDEF MUS_BOOL mus_w_has(wchar_m* str, wchar_m* find, size_m beg, size_m end);
+MUSDEF MUS_BOOL mus_has (char* str,    char* find,    size_m beg, size_m end);
+MUSDEF MUS_BOOL mus_whas(wchar_m* str, wchar_m* find, size_m beg, size_m end);
 ```
 
 Returns `MUS_TRUE` if the contents of `find` are contained somewhere within `str` from index `beg` to index `end`.
@@ -245,33 +237,14 @@ Returns `MUS_TRUE` if the contents of `find` are contained somewhere within `str
 # Character conversion
 
 ## `char` to `wchar_m` and vice versa
-There are four total functions used in the conversion of `char` strings and `wchar_m` strings, two to calculate the necessary size for conversions and two to actually execute the conversions.
-
-If you'd like to calculate the necessary size, in bytes, to convert a `wchar_m` string to a `char` or vice versa, you can use the two functions `mus_wchar_m_string_to_char_size` and `mus_char_string_to_wchar_m_size`, defined below in `MUS_H`:
+There are two functions for converting `char` strings to `wchar_m` strings and `wchar_m` strings to `char` strings, `mus_wstring_to_string` and `mus_string_to_wstring` respectively, both defined below in `MUS_H`:
 
 ```
-MUSDEF size_m mus_wchar_m_string_to_char_size(wchar_m* src);
-MUSDEF size_m mus_char_string_to_wchar_m_size(char* src);
+MUSDEF int mus_wstring_to_string(char* dest,    wchar_m* src, size_m dest_len);
+MUSDEF int mus_string_to_wstring(wchar_m* dest, char* src,    size_m dest_len);
 ```
 
-Calculates the size necessary, in bytes, to convert `src`.
-
-Note that the size returned needs to be multiplied by the data type. For example, to fully calculate the size necessary for version with `mus_wchar_m_string_to_char_size`, you'd have to do:
-
-```
-size_m actual_size = mus_wchar_m_string_to_char_size(...) * sizeof(wchar_m);
-```
-
-The same logic applies to `mus_char_string_to_wchar_m_size`.
-
-If you'd like to convert a `wchar_m` string to a `char` or vice versa, you can use the two functions `mus_wchar_m_string_to_char_string` and `mus_char_string_to_wchar_m_string`, defined below in `MUS_H`:
-
-```
-MUSDEF void mus_wchar_m_string_to_char_string(char* dest, wchar_m* src, size_m dest_size);
-MUSDEF void mus_char_string_to_wchar_m_string(wchar_m* dest, char* src, size_m dest_size);
-```
-
-Converts `src` and stores the result in `dest` given that `dest_size` is enough to hold the data for the conversion.
+Converts `src` to opposite character type and stores the result in `dest` if `dest_len` is long enough to store it. Returns -1 if conversion failed or returns the minimum length necessary to fully convert `src` if `dest` is `MUS_NULL`.
 
 # Lowercase/Uppercase functions
 
@@ -279,10 +252,11 @@ Converts `src` and stores the result in `dest` given that `dest_size` is enough 
 There are four functions for converting a character to lowercase or uppercase, `mus_char_to_lowercase`, `mus_wchar_to_lowercase`, `mus_char_to_uppercase`, and `mus_wchar_to_uppercase`, all four defined below in `MUS_H`:
 
 ```
-MUSDEF char 	mus_char_to_lowercase(char c);
-MUSDEF wchar_m 	mus_wchar_to_lowercase(wchar_m c);
-MUSDEF char 	mus_char_to_uppercase(char c);
-MUSDEF wchar_m 	mus_wchar_to_uppercase(wchar_m c);
+MUSDEF char    mus_char_to_lowercase (char c);
+MUSDEF wchar_m mus_wchar_to_lowercase(wchar_m c);
+
+MUSDEF char    mus_char_to_uppercase (char c);
+MUSDEF wchar_m mus_wchar_to_uppercase(wchar_m c);
 ```
 
 Converts the given character to lowercase/uppercase and returns the result.
@@ -293,9 +267,10 @@ Note that `mus_char_to_lowercase` and `mus_char_to_uppercase` uses normal ASCII 
 There are four functions to see if a character is lowercase or uppercase, `mus_char_is_lowercase`, `mus_wchar_is_lowercase`, `mus_char_is_uppercase`, and `mus_wchar_is_uppercase`, all four defined below in `MUS_H`:
 
 ```
-MUSDEF MUS_BOOL mus_char_is_lowercase(char c);
+MUSDEF MUS_BOOL mus_char_is_lowercase (char c);
 MUSDEF MUS_BOOL mus_wchar_is_lowercase(wchar_m c);
-MUSDEF MUS_BOOL mus_char_is_uppercase(char c);
+
+MUSDEF MUS_BOOL mus_char_is_uppercase (char c);
 MUSDEF MUS_BOOL mus_wchar_is_uppercase(wchar_m c);
 ```
 
@@ -309,24 +284,18 @@ Note that these functions have reliance on `mus_char_is_lowercase`, `mus_wchar_i
 There are two functions to convert an integer to a string, `mus_integer_to_string` for `char` strings and `mus_integer_to_wstring` for `wchar_m` strings, both defined below in `MUS_H`:
 
 ```
-MUSDEF char*    mus_integer_to_string   (size_m n);
-MUSDEF wchar_m* mus_integer_to_wstring  (size_m n);
+MUSDEF int   mus_integer_to_string (int64_m n, char* dest,    size_m dest_len);
+MUSDEF int   mus_integer_to_wstring(int64_m n, wchar_m* dest, size_m dest_len);
 ```
 
-Converts `n` to a dynamically-allocated string and returns it.
-
-Note that the string is dynamically-allocated, meaning that you have to free it yourself with `mus_free` or `free`.
+Converts `n` to a string and stores the result in `dest` if `dest_len` is long enough to store it. Returns -1 if conversion failed or returns the minimum length necessary to fully convert `n` if `dest` is `MUS_NULL`.
 
 ## Floating point number to string conversion
 There are two functions to convert a floating point number to a string, `mus_float_to_string` for `char` strings and `mus_float_to_wstring` for `wchar_m` strings, both defined below in `MUS_H`:
 
 ```
-MUSDEF char*    mus_float_to_string     (double n, size_m max_decimals);
-MUSDEF wchar_m* mus_float_to_wstring    (double n, size_m max_decimals);
+MUSDEF int   mus_float_to_string (double n, size_m max_decimals, char* dest,    size_m dest_len);
+MUSDEF int   mus_float_to_wstring(double n, size_m max_decimals, wchar_m* dest, size_m dest_len);
 ```
 
-Converts `n` to a dynamically-allocated string with `max_decimals` decimals and returns it.
-
-Note that the string is dynamically-allocated, meaning that you have to free it yourself with `mus_free` or `free`.
-
-Note that accuracy for decimals ends at around 7 decimals in.
+Converts `n` to a string and stores the result in `dest` with less decimals than `max_decimals` if `dest_len` is long enough to store it. Returns -1 if conversion failed or returns the minimum length necessary to fully convert `n` if `dest` is `MUS_NULL`.
