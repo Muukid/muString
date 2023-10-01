@@ -26,8 +26,7 @@ More explicit license information at the end of file.
     #endif
 #endif
 
-#if !defined(int64_m)  || \
-    !defined(uint64_m)
+#if !defined(int64_m)
 
     #include <stdint.h>
 
