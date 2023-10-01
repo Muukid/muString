@@ -185,41 +185,6 @@ MUSDEF wchar_m* mus_float_to_wstring    (double n, size_m max_decimals);
 
 #endif
 
-#if !defined(mus_log10)  || \
-    !defined(mus_ceil)   || \
-    !defined(mus_pow)    || \
-    !defined(mus_roundf) || \
-    !defined(mus_abs)    || \
-    !defined(mus_fabs)
-
-    #include <math.h>
-
-    #ifndef mus_log10
-        #define mus_log10 log10
-    #endif
-
-    #ifndef mus_ceil
-        #define mus_ceil ceil
-    #endif
-
-    #ifndef mus_pow
-        #define mus_pow pow
-    #endif
-
-    #ifndef mus_roundf
-        #define mus_roundf roundf
-    #endif
-
-    #ifndef mus_abs
-        #define mus_abs abs
-    #endif
-
-    #ifndef mus_fabs
-        #define mus_fabs fabs
-    #endif
-
-#endif
-
 // not sure if multi-byte state being null is fully safe
 
 MUSDEF size_m mus_wchar_m_string_to_char_size(wchar_m* src) {
