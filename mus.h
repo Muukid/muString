@@ -832,7 +832,7 @@ MUSDEF int mus_integer_to_wstring(int64_m n, wchar_m* dest, size_m dest_len) {
 
 MUSDEF int mus_float_to_string(double n, size_m max_decimals, char* dest, size_m dest_len) {
     if (max_decimals >= 10) max_decimals = 9;
-    char format[6] = "%0.0lf";
+    char format[7] = "%0.0lf\0";
     format[3] = '0' + max_decimals;
     if (dest == MUS_NULL) return mus_snprintf(MUS_NULL, 0, format, n);
     return mus_snprintf(dest, dest_len+1, format, n);
