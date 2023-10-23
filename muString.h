@@ -866,7 +866,7 @@ MUDEF int mu_float_to_wstring(double n, size_m max_decimals, wchar_m* dest, size
 This software is available under 2 licenses -- choose whichever you prefer.
 ------------------------------------------------------------------------------
 ALTERNATIVE A - MIT License
-Copyright (c) 2023 Samuel Carmichael
+Copyright (c) 2023 Hum
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
 the Software without restriction, including without limitation the rights to
