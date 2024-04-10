@@ -1220,6 +1220,7 @@ More explicit license information at the end of file.
 			MUS_ALREADY_INITIALIZED,
 			MUS_ALLOCATION_FAILED,
 			MUS_ALREADY_TERMINATED,
+			MUS_NOT_YET_INITIALIZED,
 
 			MUS_UNKNOWN_CHARACTER_ENCODING,
 
@@ -1229,7 +1230,10 @@ More explicit license information at the end of file.
 			MUS_INVALID_CODE_POINT_SIZE,
 			MUS_INVALID_DATA_SIZE,
 			MUS_INVALID_DATA_POINTER,
-			MUS_INVALID_INDEX,
+			MUS_INVALID_OFFSET,
+			MUS_INVALID_ID,
+
+			MUS_INSUFFICIENT_DATA_SIZE,
 
 			MUS_MUMA_FAILED_TO_ALLOCATE,
 			MUS_MUMA_INVALID_TYPE_SIZE,
@@ -1240,6 +1244,7 @@ More explicit license information at the end of file.
 		)
 
 		MU_ENUM(muCharacterEncoding,
+			MU_UNKNOWN_CHARACTER_ENCODING,
 			MU_ASCII,
 			MU_UTF8,
 		)
@@ -1257,6 +1262,39 @@ More explicit license information at the end of file.
 			MUDEF void mus_init(musResult* result);
 			MUDEF void mus_term(musResult* result);
 
+		/* String functions */
+
+			/* Creation / Destruction */
+
+				MUDEF muString mu_string_create(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size);
+				MUDEF muString mu_string_destroy(musResult* result, muString string);
+				MUDEF muString mu_string_duplicate(musResult* result, muString string);
+
+			/* Data */
+
+				MUDEF muByte* mu_string_get_raw_data(musResult* result, muString string, size_m* size);
+
+			/* Character encoding */
+
+				MUDEF muCharacterEncoding mu_string_get_character_encoding(musResult* result, muString string);
+				MUDEF void mu_string_convert_character_encoding(musResult* result, muString string, muCharacterEncoding desired_encoding);
+
+			/* Code point */
+
+				MUDEF size_m mu_string_get_code_point_length(musResult* result, muString string);
+
+				MUDEF size_m mu_string_get_code_point_offset(musResult* result, muString string, size_m offset, size_m index);
+
+				MUDEF muCodePoint mu_string_get_code_point(musResult* result, muString string, size_m offset);
+				MUDEF void mu_string_set_code_point(musResult* result, muString string, muCodePoint code_point, size_m offset);
+
+		/* Raw string functions */
+
+			/* Conversion */
+
+				MUDEF size_m mu_raw_string_get_character_encoding_conversion_size(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, muCharacterEncoding desired_encoding);
+				MUDEF void mu_raw_string_convert_character_encoding(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, muCharacterEncoding output_encoding, muByte* output_data, size_m output_data_size);
+
 		/* Cross-encoding functions */
 
 			MUDEF size_m mu_character_encoding_get_code_point_size(musResult* result, muCharacterEncoding encoding, muCodePoint code_point);
@@ -1266,7 +1304,7 @@ More explicit license information at the end of file.
 			MUDEF muBool mu_character_encoding_verify_raw_string(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size);
 			MUDEF size_m mu_character_encoding_get_raw_string_first_code_point_index(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size);
 			MUDEF size_m mu_character_encoding_get_raw_string_code_point_length(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size);
-			MUDEF size_m mu_character_encoding_get_raw_string_code_point_index(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, size_m offset, size_m index);
+			MUDEF size_m mu_character_encoding_get_raw_string_code_point_offset(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, size_m offset, size_m index);
 
 		/* Encoding-specific functions */
 
@@ -1279,7 +1317,7 @@ More explicit license information at the end of file.
 				MUDEF muBool mu_ASCII_verify_raw_string(musResult* result, muByte* data, size_m data_size);
 				MUDEF size_m mu_ASCII_get_raw_string_first_code_point_index(musResult* result, muByte* data, size_m data_size);
 				MUDEF size_m mu_ASCII_get_raw_string_code_point_length(musResult* result, muByte* data, size_m data_size);
-				MUDEF size_m mu_ASCII_get_raw_string_code_point_index(musResult* result, muByte* data, size_m data_size, size_m offset, size_m index);
+				MUDEF size_m mu_ASCII_get_raw_string_code_point_offset(musResult* result, muByte* data, size_m data_size, size_m offset, size_m index);
 
 			/* UTF-8 */
 
@@ -1288,9 +1326,8 @@ More explicit license information at the end of file.
 				MUDEF void mu_UTF8_set_code_point(musResult* result, muCodePoint code_point, muByte* data, size_m data_size);
 
 				MUDEF muBool mu_UTF8_verify_raw_string(musResult* result, muByte* data, size_m data_size);
-				MUDEF size_m mu_UTF8_get_raw_string_first_code_point_index(musResult* result, muByte* data, size_m data_size);
 				MUDEF size_m mu_UTF8_get_raw_string_code_point_length(musResult* result, muByte* data, size_m data_size);
-				MUDEF size_m mu_UTF8_get_raw_string_code_point_index(musResult* result, muByte* data, size_m data_size, size_m offset, size_m index);
+				MUDEF size_m mu_UTF8_get_raw_string_code_point_offset(musResult* result, muByte* data, size_m data_size, size_m offset, size_m index);
 
 	#ifdef __cplusplus
 	}
@@ -2177,13 +2214,16 @@ More explicit license information at the end of file.
 						case MUS_ALREADY_INITIALIZED: return "MUS_ALREADY_INITIALIZED"; break;
 						case MUS_ALLOCATION_FAILED: return "MUS_ALLOCATION_FAILED"; break;
 						case MUS_ALREADY_TERMINATED: return "MUS_ALREADY_TERMINATED"; break;
+						case MUS_NOT_YET_INITIALIZED: return "MUS_NOT_YET_INITIALIZED"; break;
 						case MUS_UNKNOWN_CHARACTER_ENCODING: return "MUS_UNKNOWN_CHARACTER_ENCODING"; break;
 						case MUS_CHARACTER_CANNOT_BE_ENCODED: return "MUS_CHARACTER_CANNOT_BE_ENCODED"; break;
 						case MUS_INVALID_CHARACTER_ENCODING: return "MUS_INVALID_CHARACTER_ENCODING"; break;
 						case MUS_INVALID_CODE_POINT_SIZE: return "MUS_INVALID_CODE_POINT_SIZE"; break;
 						case MUS_INVALID_DATA_SIZE: return "MUS_INVALID_DATA_SIZE"; break;
 						case MUS_INVALID_DATA_POINTER: return "MUS_INVALID_DATA_POINTER"; break;
-						case MUS_INVALID_INDEX: return "MUS_INVALID_INDEX"; break;
+						case MUS_INVALID_OFFSET: return "MUS_INVALID_OFFSET"; break;
+						case MUS_INVALID_ID: return "MUS_INVALID_ID"; break;
+						case MUS_INSUFFICIENT_DATA_SIZE: return "MUS_INSUFFICIENT_DATA_SIZE"; break;
 						case MUS_MUMA_FAILED_TO_ALLOCATE: return "MUS_MUMA_FAILED_TO_ALLOCATE"; break;
 						case MUS_MUMA_INVALID_TYPE_SIZE: return "MUS_MUMA_INVALID_TYPE_SIZE"; break;
 						case MUS_MUMA_INVALID_INDEX: return "MUS_MUMA_INVALID_INDEX"; break;
@@ -2194,10 +2234,35 @@ More explicit license information at the end of file.
 				}
 			#endif
 
+		/* Structs */
+
+			muBool mu_bstring_comp(muByte b0, muByte b1) {
+				return b0 == b1;
+			}
+
+			mu_dynamic_array_declaration(mus_byte_string, muByte, mus_bstring_, mu_bstring_comp)
+
+			struct mus_string {
+				muBool active;
+
+				muCharacterEncoding encoding;
+				mus_byte_string bytes;
+				size_m code_point_length;
+
+				#ifdef MU_THREADSAFE
+					MU_LOCK lock;
+					muBool lock_active;
+				#endif
+			};
+			typedef struct mus_string mus_string;
+
+			MU_HRARRAY_DEFAULT_FUNC(mus_string)
+
 		/* Initiation / Termination */
 
 			struct musContext {
-				int filler;
+				mus_string_array strings;
+				#define MUS_GSTRINGS mus_global_context->strings
 			};
 
 			musContext* mus_global_context = MU_NULL_PTR;
@@ -2210,18 +2275,282 @@ More explicit license information at the end of file.
 				mus_global_context = (musContext*)mu_malloc(sizeof(musContext));
 				MU_ASSERT(mus_global_context != 0, result, MUS_ALLOCATION_FAILED, return;)
 
-				// ...
+				MUS_GSTRINGS = MU_ZERO_STRUCT(mus_string_array);
 			}
 
 			MUDEF void mus_term(musResult* result) {
 				MU_SET_RESULT(result, MUS_SUCCESS)
 				MU_ASSERT(mus_global_context != MU_NULL_PTR, result, MUS_ALREADY_TERMINATED, return;)
 
-				// ...
+				for (size_m i = 0; i < MUS_GSTRINGS.length; i++) {
+					//mu_string_destroy(0, i);
+				}
+				mus_string_destroy(0, &MUS_GSTRINGS);
 
 				mu_free(mus_global_context);
 				mus_global_context = MU_NULL_PTR;
 			}
+
+		/* String functions */
+
+			/* Creation/Destruction */
+
+				MUDEF muString mu_string_create(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size) {
+					MU_SAFEFUNC(result, MUS_, mus_global_context, return MU_NONE;)
+					mumaResult muma_res = MUMA_SUCCESS;
+					musResult res = MUS_SUCCESS;
+					
+					MU_ASSERT(mu_character_encoding_verify_raw_string(&res, encoding, data, data_size) == MU_TRUE, result, MUS_INVALID_CHARACTER_ENCODING, return MU_NONE;)
+					MU_ASSERT(res == MUS_SUCCESS, result, res, return MU_NONE;)
+
+					mus_string s_string = MU_ZERO_STRUCT(mus_string);
+					s_string.active = MU_TRUE;
+
+					s_string.encoding = encoding;
+					s_string.code_point_length = mu_character_encoding_get_raw_string_code_point_length(&res, encoding, data, data_size);
+					MU_ASSERT(res == MUS_SUCCESS, result, res, return MU_NONE;)
+					
+					s_string.bytes = mus_bstring_create(&muma_res, data_size);
+					MU_ASSERT(muma_res == MUMA_SUCCESS, result, muma_result_to_mus_result(muma_res), return MU_NONE;)
+					mu_memcpy(s_string.bytes.data, data, data_size);
+
+					size_m string = MU_NONE;
+					mus_string_find_push(&muma_res, &MUS_GSTRINGS, MU_ZERO_STRUCT(mus_string), &string);
+					MU_ASSERT(muma_res == MUMA_SUCCESS && string != MU_NONE, result, muma_result_to_mus_result(muma_res), 
+						mus_bstring_destroy(0, s_string.bytes);
+					)
+
+					mus_string_hold_element(0, &MUS_GSTRINGS, string);
+					MUS_GSTRINGS.data[string] = s_string;
+					MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+					return string;
+				}
+
+				MUDEF muString mu_string_destroy(musResult* result, muString string) {
+					MU_SAFEFUNC(result, MUS_, mus_global_context, return string;)
+					MU_HOLD(result, string, MUS_GSTRINGS, mus_global_context, MUS_, return string;, mus_string_)
+					mumaResult muma_res = MUMA_SUCCESS;
+
+					mus_bstring_destroy(&muma_res, MUS_GSTRINGS.data[string].bytes);
+					MU_ASSERT(muma_res == MUMA_SUCCESS, result, muma_result_to_mus_result(muma_res), MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return string;)
+					MUS_GSTRINGS.data[string].active = MU_FALSE;
+
+					MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+					return MU_NONE;
+				}
+
+				MUDEF muString mu_string_duplicate(musResult* result, muString string) {
+					MU_SAFEFUNC(result, MUS_, mus_global_context, return MU_NONE;)
+					MU_HOLD(result, string, MUS_GSTRINGS, mus_global_context, MUS_, return MU_NONE;, mus_string_)
+					musResult mus_res = MUS_SUCCESS;
+
+					muString dupe = mu_string_create(&mus_res, 
+						MUS_GSTRINGS.data[string].encoding,
+						MUS_GSTRINGS.data[string].bytes.data,
+						MUS_GSTRINGS.data[string].bytes.length
+					);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return MU_NONE;)
+
+					MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+					return dupe;
+				}
+
+			/* Data */
+
+				MUDEF muByte* mu_string_get_raw_data(musResult* result, muString string, size_m* size) {
+					MU_SAFEFUNC(result, MUS_, mus_global_context, return MU_NULL_PTR;)
+					MU_HOLD(result, string, MUS_GSTRINGS, mus_global_context, MUS_, return MU_NULL_PTR;, mus_string_)
+
+					muByte* data = MUS_GSTRINGS.data[string].bytes.data;
+					MU_SET_RESULT(size, MUS_GSTRINGS.data[string].bytes.length)
+
+					MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+					return data;
+				}
+
+			/* Character encoding */
+
+				MUDEF muCharacterEncoding mu_string_get_character_encoding(musResult* result, muString string) {
+					MU_SAFEFUNC(result, MUS_, mus_global_context, return MU_UNKNOWN_CHARACTER_ENCODING;)
+					MU_HOLD(result, string, MUS_GSTRINGS, mus_global_context, MUS_, return MU_UNKNOWN_CHARACTER_ENCODING;, mus_string_)
+
+					muCharacterEncoding encoding = MUS_GSTRINGS.data[string].encoding;
+
+					MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+					return encoding;
+				}
+
+				MUDEF void mu_string_convert_character_encoding(musResult* result, muString string, muCharacterEncoding desired_encoding) {
+					MU_SAFEFUNC(result, MUS_, mus_global_context, return;)
+					MU_HOLD(result, string, MUS_GSTRINGS, mus_global_context, MUS_, return;, mus_string_)
+					musResult mus_res = MUS_SUCCESS;
+					mumaResult muma_res = MUMA_SUCCESS;
+
+					size_m new_size = mu_raw_string_get_character_encoding_conversion_size(&mus_res, 
+						MUS_GSTRINGS.data[string].encoding,
+						MUS_GSTRINGS.data[string].bytes.data,
+						MUS_GSTRINGS.data[string].bytes.length,
+						desired_encoding
+					);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+					if (MUS_GSTRINGS.data[string].encoding == desired_encoding) {
+						return;
+					}
+
+					mus_byte_string new_bytes = mus_bstring_create(&muma_res, new_size);
+					MU_ASSERT(muma_res == MUMA_SUCCESS, result, muma_result_to_mus_result(muma_res), MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					mu_raw_string_convert_character_encoding(&mus_res, 
+						MUS_GSTRINGS.data[string].encoding,
+						MUS_GSTRINGS.data[string].bytes.data,
+						MUS_GSTRINGS.data[string].bytes.length,
+						desired_encoding,
+						new_bytes.data,
+						new_bytes.length
+					);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, mus_bstring_destroy(0, new_bytes); MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					size_m new_code_point_length = mu_character_encoding_get_raw_string_code_point_length(&mus_res,
+						desired_encoding, new_bytes.data, new_bytes.length
+					);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, mus_bstring_destroy(0, new_bytes); MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					mus_bstring_destroy(0, MUS_GSTRINGS.data[string].bytes);
+					MUS_GSTRINGS.data[string].bytes = new_bytes;
+					MUS_GSTRINGS.data[string].encoding = desired_encoding;
+					MUS_GSTRINGS.data[string].code_point_length = new_code_point_length;
+
+					MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+				}
+
+			/* Code point */
+
+				MUDEF size_m mu_string_get_code_point_length(musResult* result, muString string) {
+					MU_SAFEFUNC(result, MUS_, mus_global_context, return 0;)
+					MU_HOLD(result, string, MUS_GSTRINGS, mus_global_context, MUS_, return 0;, mus_string_)
+
+					size_m code_point_length = MUS_GSTRINGS.data[string].code_point_length;
+
+					MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+					return code_point_length;
+				}
+
+				MUDEF size_m mu_string_get_code_point_offset(musResult* result, muString string, size_m offset, size_m index) {
+					MU_SAFEFUNC(result, MUS_, mus_global_context, return 0;)
+					MU_HOLD(result, string, MUS_GSTRINGS, mus_global_context, MUS_, return 0;, mus_string_)
+					musResult mus_res = MUS_SUCCESS;
+
+					size_m ret_offset = mu_character_encoding_get_raw_string_code_point_offset(&mus_res,
+						MUS_GSTRINGS.data[string].encoding,
+						MUS_GSTRINGS.data[string].bytes.data,
+						MUS_GSTRINGS.data[string].bytes.length,
+						offset, index
+					);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return 0;)
+
+					MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+					return ret_offset;
+				}
+
+				MUDEF muCodePoint mu_string_get_code_point(musResult* result, muString string, size_m offset) {
+					MU_SAFEFUNC(result, MUS_, mus_global_context, return 0;)
+					MU_HOLD(result, string, MUS_GSTRINGS, mus_global_context, MUS_, return 0;, mus_string_)
+					musResult mus_res = MUS_SUCCESS;
+
+					MU_ASSERT(offset < MUS_GSTRINGS.data[string].bytes.length, result, MUS_INVALID_OFFSET, MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return 0;)
+
+					muCodePoint cp = mu_character_encoding_get_code_point(&mus_res, 
+						MUS_GSTRINGS.data[string].encoding,
+						&MUS_GSTRINGS.data[string].bytes.data[offset],
+						MUS_GSTRINGS.data[string].bytes.length-offset
+					);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return 0;)
+
+					MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+					return cp;
+				}
+
+				MUDEF void mu_string_set_code_point(musResult* result, muString string, muCodePoint code_point, size_m offset) {
+					MU_SAFEFUNC(result, MUS_, mus_global_context, return;)
+					MU_HOLD(result, string, MUS_GSTRINGS, mus_global_context, MUS_, return;, mus_string_)
+					musResult mus_res = MUS_SUCCESS;
+
+					MU_ASSERT(offset < MUS_GSTRINGS.data[string].bytes.length, result, MUS_INVALID_OFFSET, MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					mu_character_encoding_set_code_point(&mus_res, 
+						MUS_GSTRINGS.data[string].encoding,
+						code_point,
+						&MUS_GSTRINGS.data[string].bytes.data[offset],
+						MUS_GSTRINGS.data[string].bytes.length-offset
+					);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+				}
+
+		/* Raw string functions */
+
+			/* Conversion */
+
+				MUDEF size_m mu_raw_string_get_character_encoding_conversion_size(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, muCharacterEncoding desired_encoding) {
+					MU_SET_RESULT(result, MUS_SUCCESS)
+					MU_ASSERT(data != MU_NULL_PTR, result, MUS_INVALID_DATA_POINTER, return 0;)
+					MU_ASSERT(data_size > 0, result, MUS_INVALID_DATA_SIZE, return 0;)
+					musResult res = MUS_SUCCESS;
+
+					size_m i = mu_character_encoding_get_raw_string_code_point_offset(&res, encoding, data, data_size, 0, 0);
+					MU_ASSERT(res == MUS_SUCCESS, result, res, return 0;)
+
+					size_m output_size = 0;
+
+					for (; i < data_size;) {
+						muCodePoint cp = mu_character_encoding_get_code_point(&res, encoding, &data[i], data_size-i);
+						MU_ASSERT(res == MUS_SUCCESS, result, res, return 0;)
+
+						size_m cp_size = mu_character_encoding_get_code_point_size(&res, desired_encoding, cp);
+						MU_ASSERT(res == MUS_SUCCESS, result, res, return 0;)
+						output_size += cp_size;
+
+						cp_size = mu_character_encoding_get_code_point_size(&res, encoding, cp);
+						MU_ASSERT(res == MUS_SUCCESS, result, res, return 0;)
+
+						i += cp_size;
+					}
+
+					return output_size;
+				}
+
+				MUDEF void mu_raw_string_convert_character_encoding(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, muCharacterEncoding output_encoding, muByte* output_data, size_m output_data_size) {
+					MU_SET_RESULT(result, MUS_SUCCESS)
+					MU_ASSERT(data != MU_NULL_PTR, result, MUS_INVALID_DATA_POINTER, return;)
+					MU_ASSERT(output_data != MU_NULL_PTR, result, MUS_INVALID_DATA_POINTER, return;)
+					MU_ASSERT(data_size > 0, result, MUS_INVALID_DATA_SIZE, return;)
+					MU_ASSERT(output_data_size > 0, result, MUS_INVALID_DATA_SIZE, return;)
+					musResult res = MUS_SUCCESS;
+
+					size_m input_i = mu_character_encoding_get_raw_string_code_point_offset(&res, encoding, data, data_size, 0, 0);
+					MU_ASSERT(res == MUS_SUCCESS, result, res, return;)
+
+					size_m output_i = 0;
+
+					for (; input_i < data_size;) {
+						muCodePoint input_cp = mu_character_encoding_get_code_point(&res, encoding, &data[input_i], data_size-input_i);
+						MU_ASSERT(res == MUS_SUCCESS, result, res, return;)
+
+						size_m input_cp_size = mu_character_encoding_get_code_point_size(&res, encoding, input_cp);
+						MU_ASSERT(res == MUS_SUCCESS, result, res, return;)
+
+						size_m output_cp_size = mu_character_encoding_get_code_point_size(&res, output_encoding, input_cp);
+						MU_ASSERT(res == MUS_SUCCESS, result, res, return;)
+
+						input_i += input_cp_size;
+						MU_ASSERT((output_data_size - output_i) >= output_cp_size, result, MUS_INSUFFICIENT_DATA_SIZE, return;)
+
+						mu_character_encoding_set_code_point(&res, output_encoding, input_cp, &output_data[output_i], output_data_size-output_i);
+						MU_ASSERT(res == MUS_SUCCESS, result, res, return;)
+						output_i += output_cp_size;
+					}
+				}
 
 		/* Cross-encoding functions */
 
@@ -2253,13 +2582,6 @@ More explicit license information at the end of file.
 				}
 			}
 
-			MUDEF size_m mu_character_encoding_get_raw_string_first_code_point_index(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size) {
-				switch (encoding) { default: MU_SET_RESULT(result, MUS_UNKNOWN_CHARACTER_ENCODING) return 0; break;
-					case MU_ASCII: return mu_ASCII_get_raw_string_first_code_point_index(result, data, data_size); break;
-					case MU_UTF8: return mu_UTF8_get_raw_string_first_code_point_index(result, data, data_size); break;
-				}
-			}
-
 			MUDEF size_m mu_character_encoding_get_raw_string_code_point_length(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size) {
 				switch (encoding) { default: MU_SET_RESULT(result, MUS_UNKNOWN_CHARACTER_ENCODING) return 0; break;
 					case MU_ASCII: return mu_ASCII_get_raw_string_code_point_length(result, data, data_size); break;
@@ -2267,10 +2589,10 @@ More explicit license information at the end of file.
 				}
 			}
 
-			MUDEF size_m mu_character_encoding_get_raw_string_code_point_index(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, size_m offset, size_m index) {
+			MUDEF size_m mu_character_encoding_get_raw_string_code_point_offset(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, size_m offset, size_m index) {
 				switch (encoding) { default: MU_SET_RESULT(result, MUS_UNKNOWN_CHARACTER_ENCODING) return 0; break;
-					case MU_ASCII: return mu_ASCII_get_raw_string_code_point_index(result, data, data_size, offset, index); break;
-					case MU_UTF8: return mu_UTF8_get_raw_string_code_point_index(result, data, data_size, offset, index); break;
+					case MU_ASCII: return mu_ASCII_get_raw_string_code_point_offset(result, data, data_size, offset, index); break;
+					case MU_UTF8: return mu_UTF8_get_raw_string_code_point_offset(result, data, data_size, offset, index); break;
 				}
 			}
 
@@ -2317,14 +2639,6 @@ More explicit license information at the end of file.
 					return MU_TRUE;
 				}
 
-				MUDEF size_m mu_ASCII_get_raw_string_first_code_point_index(musResult* result, muByte* data, size_m data_size) {
-					MU_SET_RESULT(result, MUS_SUCCESS)
-					MU_ASSERT(data != MU_NULL_PTR, result, MUS_INVALID_DATA_POINTER, return 0;)
-					MU_ASSERT(data_size > 0, result, MUS_INVALID_DATA_SIZE, return 0;)
-
-					return 0;
-				}
-
 				MUDEF size_m mu_ASCII_get_raw_string_code_point_length(musResult* result, muByte* data, size_m data_size) {
 					MU_SET_RESULT(result, MUS_SUCCESS)
 					MU_ASSERT(data != MU_NULL_PTR, result, MUS_INVALID_DATA_POINTER, return 0;)
@@ -2333,11 +2647,11 @@ More explicit license information at the end of file.
 					return data_size;
 				}
 
-				MUDEF size_m mu_ASCII_get_raw_string_code_point_index(musResult* result, muByte* data, size_m data_size, size_m offset, size_m index) {
+				MUDEF size_m mu_ASCII_get_raw_string_code_point_offset(musResult* result, muByte* data, size_m data_size, size_m offset, size_m index) {
 					MU_SET_RESULT(result, MUS_SUCCESS)
 					MU_ASSERT(data != MU_NULL_PTR, result, MUS_INVALID_DATA_POINTER, return offset;)
 					MU_ASSERT(data_size > 0, result, MUS_INVALID_DATA_SIZE, return offset;)
-					MU_ASSERT(offset+index < data_size, result, MUS_INVALID_INDEX, return offset;)
+					MU_ASSERT(offset+index < data_size, result, MUS_INVALID_OFFSET, return offset;)
 
 					return offset+index;
 				}
@@ -2523,21 +2837,6 @@ More explicit license information at the end of file.
 					return MU_TRUE;
 				}
 
-				MUDEF size_m mu_UTF8_get_raw_string_first_code_point_index(musResult* result, muByte* data, size_m data_size) {
-					MU_SET_RESULT(result, MUS_SUCCESS)
-					MU_ASSERT(data != MU_NULL_PTR, result, MUS_INVALID_DATA_POINTER, return 0;)
-					MU_ASSERT(data_size > 0, result, MUS_INVALID_DATA_SIZE, return 0;)
-
-					// BOM
-					if (data_size >= 3) {
-						if (data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF) {
-							return 3;
-						}
-					}
-
-					return 0;
-				}
-
 				MUDEF size_m mu_UTF8_get_raw_string_code_point_length(musResult* result, muByte* data, size_m data_size) {
 					MU_SET_RESULT(result, MUS_SUCCESS)
 					MU_ASSERT(data != MU_NULL_PTR, result, MUS_INVALID_DATA_POINTER, return 0;)
@@ -2564,7 +2863,7 @@ More explicit license information at the end of file.
 					return code_point_length;
 				}
 
-				MUDEF size_m mu_UTF8_get_raw_string_code_point_index(musResult* result, muByte* data, size_m data_size, size_m offset, size_m index) {
+				MUDEF size_m mu_UTF8_get_raw_string_code_point_offset(musResult* result, muByte* data, size_m data_size, size_m offset, size_m index) {
 					MU_SET_RESULT(result, MUS_SUCCESS)
 					MU_ASSERT(data != MU_NULL_PTR, result, MUS_INVALID_DATA_POINTER, return 0;)
 					MU_ASSERT(data_size > 0, result, MUS_INVALID_DATA_SIZE, return 0;)
@@ -2590,7 +2889,7 @@ More explicit license information at the end of file.
 						i += code_point_size;
 					}
 
-					MU_ASSERT(count_index == index, result, MUS_INVALID_INDEX, return 0;)
+					MU_ASSERT(count_index == index, result, MUS_INVALID_OFFSET, return 0;)
 					return i;
 				}
 
