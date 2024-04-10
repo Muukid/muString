@@ -2474,8 +2474,43 @@ More explicit license information at the end of file.
 					MU_SAFEFUNC(result, MUS_, mus_global_context, return;)
 					MU_HOLD(result, string, MUS_GSTRINGS, mus_global_context, MUS_, return;, mus_string_)
 					musResult mus_res = MUS_SUCCESS;
+					mumaResult muma_res = MUMA_SUCCESS;
 
 					MU_ASSERT(offset < MUS_GSTRINGS.data[string].bytes.length, result, MUS_INVALID_OFFSET, MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					// Get sizes of current code point and the code point to be set
+
+					muCodePoint prev_cp = mu_character_encoding_get_code_point(&mus_res, 
+						MUS_GSTRINGS.data[string].encoding,
+						&MUS_GSTRINGS.data[string].bytes.data[offset],
+						MUS_GSTRINGS.data[string].bytes.length-offset
+					);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					size_m prev_cp_size = mu_character_encoding_get_code_point_size(&mus_res, MUS_GSTRINGS.data[string].encoding, prev_cp);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+					size_m cp_size = mu_character_encoding_get_code_point_size(&mus_res, MUS_GSTRINGS.data[string].encoding, code_point);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					// Compare sizes and shift data accordingly
+
+					if (prev_cp_size > cp_size) {
+						MUS_GSTRINGS.data[string].bytes = mus_bstring_lshift(&muma_res, 
+							MUS_GSTRINGS.data[string].bytes,
+							offset + prev_cp_size,
+							prev_cp_size - cp_size
+						);
+						MU_ASSERT(muma_res == MUMA_SUCCESS, result, muma_result_to_mus_result(muma_res), MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+					} else if (prev_cp_size < cp_size) {
+						MUS_GSTRINGS.data[string].bytes = mus_bstring_rshift(&muma_res,
+							MUS_GSTRINGS.data[string].bytes,
+							offset + prev_cp_size,
+							cp_size - prev_cp_size
+						);
+						MU_ASSERT(muma_res == MUMA_SUCCESS, result, muma_result_to_mus_result(muma_res), MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+					}
+
+					// Set code point
 
 					mu_character_encoding_set_code_point(&mus_res, 
 						MUS_GSTRINGS.data[string].encoding,
