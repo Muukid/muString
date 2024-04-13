@@ -11,1181 +11,1200 @@ More explicit license information at the end of file.
 @MENTION Unicode surrogates are totally allowed.
 */
 
-/* muu header commit 289f999 */
-
-#ifndef MUU_H
-	#define MUU_H
+#ifndef MUS_H
+	#define MUS_H
 	
-	#if !defined(MU_SECURE_WARNINGS) && !defined(_CRT_SECURE_NO_WARNINGS)
-		#define _CRT_SECURE_NO_WARNINGS
-	#endif
-
-	#ifdef __cplusplus
-	extern "C" { // }
-	#endif
-
-	#define MUU_VERSION_MAJOR 1
-	#define MUU_VERSION_MINOR 0
-	#define MUU_VERSION_PATCH 0
-
-	/* C standard library dependencies */
-
-		#if !defined(int8_m)   || \
-			!defined(uint8_m)  || \
-			!defined(int16_m)  || \
-			!defined(uint16_m) || \
-			!defined(int32_m)  || \
-			!defined(uint32_m) || \
-			!defined(int64_m)  || \
-			!defined(uint64_m)
-
-			#define __STDC_LIMIT_MACROS
-			#define __STDC_CONSTANT_MACROS
-			#include <stdint.h>
-
-			#ifndef int8_m
-				#ifdef INT8_MAX
-					#define int8_m int8_t
-				#else
-					#define int8_m char
-				#endif
-			#endif
-
-			#ifndef uint8_m
-				#ifdef UINT8_MAX
-					#define uint8_m uint8_t
-				#else
-					#define uint8_m unsigned char
-				#endif
-			#endif
-
-			#ifndef int16_m
-				#ifdef INT16_MAX
-					#define int16_m int16_t
-				#else
-					#define int16_m short
-				#endif
-			#endif
-
-			#ifndef uint16_m
-				#ifdef UINT16_MAX
-					#define uint16_m uint16_t
-				#else
-					#define uint16_m unsigned short
-				#endif
-			#endif
-
-			#ifndef int32_m
-				#ifdef INT32_MAX
-					#define int32_m int32_t
-				#else
-					#define int32_m long
-				#endif
-			#endif
-
-			#ifndef uint32_m
-				#ifdef UINT32_MAX
-					#define uint32_m uint32_t
-				#else
-					#define uint32_m unsigned long
-				#endif
-			#endif
-
-			#ifndef int64_m
-				#ifdef INT64_MAX
-					#define int64_m int64_t
-				#else
-					#define int64_m long long
-				#endif
-			#endif
-
-			#ifndef uint64_m
-				#ifdef UINT64_MAX
-					#define uint64_m uint64_t
-				#else
-					#define uint64_m unsigned long long
-				#endif
-			#endif
-
-		#endif
-
-		#if !defined(size_m)
-
-			#include <stddef.h>
-
-			#ifndef size_m
-				#define size_m size_t
-			#endif
-
-		#endif
-
-		#if !defined(MU_SIZE_MAX)
-
-			#include <stdint.h>
-
-			#ifndef MU_SIZE_MAX
-				#define MU_SIZE_MAX SIZE_MAX
-			#endif
-
-		#endif
-
-		#if !defined(muBool)   || \
-			!defined(MU_TRUE)  || \
-			!defined(MU_FALSE)
-
-			#include <stdbool.h>
-
-			#ifndef muBool
-				#define muBool bool
-			#endif
-
-			#ifndef MU_TRUE
-				#define MU_TRUE true
-			#endif
-
-			#ifndef MU_FALSE
-				#define MU_FALSE false
-			#endif
-
-		#endif
-
-	/* Useful macros */
-
-		#ifndef MUDEF
-			#ifdef MU_STATIC
-				#define MUDEF static
-			#else
-				#define MUDEF extern
-			#endif
-		#endif
-
-		#ifndef MU_ZERO_STRUCT
-			#ifdef __cplusplus
-				#define MU_ZERO_STRUCT(s) {}
-			#else
-				#define MU_ZERO_STRUCT(s) (s){0}
-			#endif
-		#endif
-
-		#ifndef MU_ZERO_STRUCT_CONST
-			#ifdef __cplusplus
-				#define MU_ZERO_STRUCT_CONST(s) {}
-			#else
-				#define MU_ZERO_STRUCT_CONST(s) {0}
-			#endif
-		#endif
-
-		#ifndef muByte
-			#define muByte uint8_m
-		#endif
-
-		#ifndef mu_rle_uint8
-			#define mu_rle_uint8(b) ((uint8_m)b[0] << 0)
-		#endif
-		#ifndef mu_rbe_uint8
-			#define mu_rbe_uint8(b) ((uint8_m)b[0] << 0)
-		#endif
-
-		#ifndef mu_rle_uint16
-			#define mu_rle_uint16(b) ((uint16_m)b[0] << 0 | (uint16_m)b[1] << 8)
-		#endif
-		#ifndef mu_rbe_uint16
-			#define mu_rbe_uint16(b) ((uint16_m)b[1] << 0 | (uint16_m)b[0] << 8)
-		#endif
-
-		#ifndef mu_rle_uint32
-			#define mu_rle_uint32(b) ((uint32_m)b[0] << 0 | (uint32_m)b[1] << 8 | (uint32_m)b[2] << 16 | (uint32_m)b[3] << 24)
-		#endif
-		#ifndef mu_rbe_uint32
-			#define mu_rbe_uint32(b) ((uint32_m)b[3] << 0 | (uint32_m)b[2] << 8 | (uint32_m)b[1] << 16 | (uint32_m)b[0] << 24)
-		#endif
-
-		#ifndef mu_rle_uint64
-			#define mu_rle_uint64(b) ((uint64_m)b[0] << 0 | (uint64_m)b[1] << 8 | (uint64_m)b[2] << 16 | (uint64_m)b[3] << 24 | (uint64_m)b[4] << 32 | (uint64_m)b[5] << 40 | (uint64_m)b[6] << 48 | (uint64_m)b[7] << 56)
-		#endif
-		#ifndef mu_rbe_uint64
-			#define mu_rbe_uint64(b) ((uint64_m)b[7] << 0 | (uint64_m)b[6] << 8 | (uint64_m)b[5] << 16 | (uint64_m)b[4] << 24 | (uint64_m)b[3] << 32 | (uint64_m)b[2] << 40 | (uint64_m)b[1] << 48 | (uint64_m)b[0] << 56)
-		#endif
-
-		#ifndef mu_wle_uint8
-			#define mu_wle_uint8(b, i) b[0] = (uint8_m)(i >> 0);
-		#endif
-		#ifndef mu_wbe_uint8
-			#define mu_wbe_uint8(b, i) b[0] = (uint8_m)(i >> 0);
-		#endif
-
-		#ifndef mu_wle_uint16
-			#define mu_wle_uint16(b, i) b[0] = (uint8_m)(i >> 0); b[1] = (uint8_m)(i >> 8);
-		#endif
-		#ifndef mu_wbe_uint16
-			#define mu_wbe_uint16(b, i) b[1] = (uint8_m)(i >> 0); b[0] = (uint8_m)(i >> 8);
-		#endif
-
-		#ifndef mu_wle_uint32
-			#define mu_wle_uint32(b, i) b[0] = (uint8_m)(i >> 0); b[1] = (uint8_m)(i >> 8); b[2] = (uint8_m)(i >> 16); b[3] = (uint8_m)(i >> 24);
-		#endif
-		#ifndef mu_wbe_uint32
-			#define mu_wbe_uint32(b, i) b[3] = (uint8_m)(i >> 0); b[2] = (uint8_m)(i >> 8); b[1] = (uint8_m)(i >> 16); b[0] = (uint8_m)(i >> 24);
-		#endif
-
-		#ifndef mu_wle_uint64
-			#define mu_wle_uint64(b, i) b[0] = (uint8_m)(i >> 0); b[1] = (uint8_m)(i >> 8); b[2] = (uint8_m)(i >> 16); b[3] = (uint8_m)(i >> 24); b[4] = (uint8_m)(i >> 32); b[5] = (uint8_m)(i >> 40); b[6] = (uint8_m)(i >> 48); b[7] = (uint8_m)(i >> 56);
-		#endif
-		#ifndef mu_wbe_uint64
-			#define mu_wbe_uint64(b, i) b[7] = (uint8_m)(i >> 0); b[6] = (uint8_m)(i >> 8); b[5] = (uint8_m)(i >> 16); b[4] = (uint8_m)(i >> 24); b[3] = (uint8_m)(i >> 32); b[2] = (uint8_m)(i >> 40); b[1] = (uint8_m)(i >> 48); b[0] = (uint8_m)(i >> 56);
-		#endif
-
-		#ifndef MU_NULL_PTR
-			#define MU_NULL_PTR 0
-		#endif
-
-		#ifndef MU_NULL
-			#define MU_NULL 0
-		#endif
-
-		#ifndef MU_NONE
-			#define MU_NONE MU_SIZE_MAX
-		#endif
-
-		#ifndef MU_SET_RESULT
-			#define MU_SET_RESULT(res, val) if(res!=MU_NULL_PTR){*res=val;}
-		#endif
-
-		#ifndef MU_ASSERT
-			#define MU_ASSERT(cond, res, val, after) if(!(cond)){MU_SET_RESULT(res, val) after}
-		#endif
-
-		#define MU_ENUM(name, ...) enum _##name{__VA_ARGS__};typedef enum _##name _##name; typedef size_m name;
-
-		#if !defined(MU_WIN32) && !defined(MU_UNIX)
-			#if defined(WIN32) || defined(_WIN32)
-				#define MU_WIN32
-			#elif defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
-				#define MU_UNIX
-			#endif
-		#endif
-
-		#define MU_HRARRAY_DEFAULT_FUNC(name) \
-			muBool name##_comp(name t0, name t1) { \
-				return t0.active == t1.active; \
-			} \
-			\
-			void name##_on_creation(name* p) { \
-				if (p != MU_NULL_PTR) { \
-					MU_LOCK_CREATE(p->lock, p->lock_active) \
-				} \
-			} \
-			void name##_on_destruction(name* p) { \
-				if (p != MU_NULL_PTR) { \
-					MU_LOCK_DESTROY(p->lock, p->lock_active) \
-				} \
-			} \
-			void name##_on_hold(name* p) { \
-				if (p != MU_NULL_PTR) { \
-					MU_LOCK_LOCK(p->lock, p->lock_active) \
-				} \
-			} \
-			void name##_on_release(name* p) { \
-				if (p != MU_NULL_PTR) { \
-					MU_LOCK_UNLOCK(p->lock, p->lock_active) \
-				} \
-			} \
-			\
-			mu_dynamic_hrarray_declaration( \
-				name##_array, name, name##_, name##_comp, \
-				name##_on_creation, name##_on_destruction, name##_on_hold, name##_on_release \
-			)
-
-		#define MU_SAFEFUNC(result, lib_prefix, context, fail_return) \
-			MU_SET_RESULT(result, lib_prefix##SUCCESS) \
-			MU_ASSERT(context != MU_NULL_PTR, result, lib_prefix##NOT_YET_INITIALIZED, fail_return) \
-
-		#define MU_HOLD(result, item, da, context, lib_prefix, fail_return, da_prefix) \
-			MU_ASSERT(item < da.length, result, lib_prefix##INVALID_ID, fail_return) \
-			da_prefix##hold_element(0, &da, item); \
-			MU_ASSERT(da.data[item].active, result, lib_prefix##INVALID_ID, da_prefix##release_element(0, &da, item); fail_return)
-
-		#define MU_RELEASE(da, item, da_prefix) \
-			da_prefix##release_element(0, &da, item);
-
-	#ifdef __cplusplus
-	}
-	#endif
-
-#endif /* MUU_H */
-
-/* muma header (commit c0925a3) */
-
-#ifndef MUMA_H
-	#define MUMA_H
+	/* muMemoryAllocator version 1.0.0 header */
 	
-	#ifdef __cplusplus
-		extern "C" {
-	#endif
+		#if !defined(MU_CHECK_VERSION_MISMATCHING) && defined(MUMA_H) && \
+			(MUMA_VERSION_MAJOR != 1 || MUMA_VERSION_MINOR != 0 || MUMA_VERSION_PATCH != 0)
 
-	#define MUMA_VERSION_MAJOR 1
-	#define MUMA_VERSION_MINOR 0
-	#define MUMA_VERSION_PATCH 0
-
-	/* C standard library dependencies */
-
-		#if !defined(mu_malloc)  || \
-			!defined(mu_free)    || \
-			!defined(mu_realloc)
-
-			#include <stdlib.h>
-
-			#ifndef mu_malloc
-				#define mu_malloc malloc
-			#endif
-
-			#ifndef mu_free
-				#define mu_free free
-			#endif
-
-			#ifndef mu_realloc
-				#define mu_realloc realloc
-			#endif
+			#pragma message("[MUS] muMemoryAllocator's header has already been defined, but version doesn't match the version that this library is built for. This may lead to errors, warnings, or unexpected behavior. Define MU_CHECK_VERSION_MISMATCHING before this to turn off this message.")
 
 		#endif
 
-		#if !defined(mu_memset) || \
-			!defined(mu_memcpy)
+		#ifndef MUMA_H
+			#define MUMA_H
+			
+			/* muUtility version 1.0.0 header */
+			
+				#if !defined(MU_CHECK_VERSION_MISMATCHING) && defined(MUU_H) && \
+					(MUU_VERSION_MAJOR != 1 || MUU_VERSION_MINOR != 0 || MUU_VERSION_PATCH != 0)
 
-			#include <string.h>
+					#pragma message("[MUMA] muUtility's header has already been defined, but version doesn't match the version that this library is built for. This may lead to errors, warnings, or unexpected behavior. Define MU_CHECK_VERSION_MISMATCHING before this to turn off this message.")
 
-			#ifndef mu_memset
-				#define mu_memset memset
+				#endif
+
+				#ifndef MUU_H
+					#define MUU_H
+					
+					#if !defined(MU_SECURE_WARNINGS) && !defined(_CRT_SECURE_NO_WARNINGS)
+						#define _CRT_SECURE_NO_WARNINGS
+					#endif
+
+					#ifdef __cplusplus
+					extern "C" { // }
+					#endif
+
+					#define MUU_VERSION_MAJOR 1
+					#define MUU_VERSION_MINOR 0
+					#define MUU_VERSION_PATCH 0
+
+					/* C standard library dependencies */
+
+						#if !defined(int8_m)      || \
+							!defined(uint8_m)     || \
+							!defined(int16_m)     || \
+							!defined(uint16_m)    || \
+							!defined(int32_m)     || \
+							!defined(uint32_m)    || \
+							!defined(int64_m)     || \
+							!defined(uint64_m)    || \
+							!defined(MU_SIZE_MAX)
+
+							#define __STDC_LIMIT_MACROS
+							#define __STDC_CONSTANT_MACROS
+							#include <stdint.h>
+
+							#ifndef int8_m
+								#ifdef INT8_MAX
+									#define int8_m int8_t
+								#else
+									#define int8_m char
+								#endif
+							#endif
+
+							#ifndef uint8_m
+								#ifdef UINT8_MAX
+									#define uint8_m uint8_t
+								#else
+									#define uint8_m unsigned char
+								#endif
+							#endif
+
+							#ifndef int16_m
+								#ifdef INT16_MAX
+									#define int16_m int16_t
+								#else
+									#define int16_m short
+								#endif
+							#endif
+
+							#ifndef uint16_m
+								#ifdef UINT16_MAX
+									#define uint16_m uint16_t
+								#else
+									#define uint16_m unsigned short
+								#endif
+							#endif
+
+							#ifndef int32_m
+								#ifdef INT32_MAX
+									#define int32_m int32_t
+								#else
+									#define int32_m long
+								#endif
+							#endif
+
+							#ifndef uint32_m
+								#ifdef UINT32_MAX
+									#define uint32_m uint32_t
+								#else
+									#define uint32_m unsigned long
+								#endif
+							#endif
+
+							#ifndef int64_m
+								#ifdef INT64_MAX
+									#define int64_m int64_t
+								#else
+									#define int64_m long long
+								#endif
+							#endif
+
+							#ifndef uint64_m
+								#ifdef UINT64_MAX
+									#define uint64_m uint64_t
+								#else
+									#define uint64_m unsigned long long
+								#endif
+							#endif
+
+							#ifndef MU_SIZE_MAX
+								#define MU_SIZE_MAX SIZE_MAX
+							#endif
+
+						#endif
+
+						#if !defined(size_m)
+
+							#include <stddef.h>
+
+							#ifndef size_m
+								#define size_m size_t
+							#endif
+
+						#endif
+
+						#if !defined(muBool)   || \
+							!defined(MU_TRUE)  || \
+							!defined(MU_FALSE)
+
+							#include <stdbool.h>
+
+							#ifndef muBool
+								#define muBool bool
+							#endif
+
+							#ifndef MU_TRUE
+								#define MU_TRUE true
+							#endif
+
+							#ifndef MU_FALSE
+								#define MU_FALSE false
+							#endif
+
+						#endif
+
+					/* Useful macros */
+
+						#ifndef MUDEF
+							#ifdef MU_STATIC
+								#define MUDEF static
+							#else
+								#define MUDEF extern
+							#endif
+						#endif
+
+						#ifndef MU_ZERO_STRUCT
+							#ifdef __cplusplus
+								#define MU_ZERO_STRUCT(s) {}
+							#else
+								#define MU_ZERO_STRUCT(s) (s){0}
+							#endif
+						#endif
+
+						#ifndef MU_ZERO_STRUCT_CONST
+							#ifdef __cplusplus
+								#define MU_ZERO_STRUCT_CONST(s) {}
+							#else
+								#define MU_ZERO_STRUCT_CONST(s) {0}
+							#endif
+						#endif
+
+						#ifndef muByte
+							#define muByte uint8_m
+						#endif
+
+						#ifndef mu_rle_uint8
+							#define mu_rle_uint8(b) ((uint8_m)b[0] << 0)
+						#endif
+						#ifndef mu_rbe_uint8
+							#define mu_rbe_uint8(b) ((uint8_m)b[0] << 0)
+						#endif
+
+						#ifndef mu_rle_uint16
+							#define mu_rle_uint16(b) ((uint16_m)b[0] << 0 | (uint16_m)b[1] << 8)
+						#endif
+						#ifndef mu_rbe_uint16
+							#define mu_rbe_uint16(b) ((uint16_m)b[1] << 0 | (uint16_m)b[0] << 8)
+						#endif
+
+						#ifndef mu_rle_uint32
+							#define mu_rle_uint32(b) ((uint32_m)b[0] << 0 | (uint32_m)b[1] << 8 | (uint32_m)b[2] << 16 | (uint32_m)b[3] << 24)
+						#endif
+						#ifndef mu_rbe_uint32
+							#define mu_rbe_uint32(b) ((uint32_m)b[3] << 0 | (uint32_m)b[2] << 8 | (uint32_m)b[1] << 16 | (uint32_m)b[0] << 24)
+						#endif
+
+						#ifndef mu_rle_uint64
+							#define mu_rle_uint64(b) ((uint64_m)b[0] << 0 | (uint64_m)b[1] << 8 | (uint64_m)b[2] << 16 | (uint64_m)b[3] << 24 | (uint64_m)b[4] << 32 | (uint64_m)b[5] << 40 | (uint64_m)b[6] << 48 | (uint64_m)b[7] << 56)
+						#endif
+						#ifndef mu_rbe_uint64
+							#define mu_rbe_uint64(b) ((uint64_m)b[7] << 0 | (uint64_m)b[6] << 8 | (uint64_m)b[5] << 16 | (uint64_m)b[4] << 24 | (uint64_m)b[3] << 32 | (uint64_m)b[2] << 40 | (uint64_m)b[1] << 48 | (uint64_m)b[0] << 56)
+						#endif
+
+						#ifndef mu_wle_uint8
+							#define mu_wle_uint8(b, i) b[0] = (uint8_m)(i >> 0);
+						#endif
+						#ifndef mu_wbe_uint8
+							#define mu_wbe_uint8(b, i) b[0] = (uint8_m)(i >> 0);
+						#endif
+
+						#ifndef mu_wle_uint16
+							#define mu_wle_uint16(b, i) b[0] = (uint8_m)(i >> 0); b[1] = (uint8_m)(i >> 8);
+						#endif
+						#ifndef mu_wbe_uint16
+							#define mu_wbe_uint16(b, i) b[1] = (uint8_m)(i >> 0); b[0] = (uint8_m)(i >> 8);
+						#endif
+
+						#ifndef mu_wle_uint32
+							#define mu_wle_uint32(b, i) b[0] = (uint8_m)(i >> 0); b[1] = (uint8_m)(i >> 8); b[2] = (uint8_m)(i >> 16); b[3] = (uint8_m)(i >> 24);
+						#endif
+						#ifndef mu_wbe_uint32
+							#define mu_wbe_uint32(b, i) b[3] = (uint8_m)(i >> 0); b[2] = (uint8_m)(i >> 8); b[1] = (uint8_m)(i >> 16); b[0] = (uint8_m)(i >> 24);
+						#endif
+
+						#ifndef mu_wle_uint64
+							#define mu_wle_uint64(b, i) b[0] = (uint8_m)(i >> 0); b[1] = (uint8_m)(i >> 8); b[2] = (uint8_m)(i >> 16); b[3] = (uint8_m)(i >> 24); b[4] = (uint8_m)(i >> 32); b[5] = (uint8_m)(i >> 40); b[6] = (uint8_m)(i >> 48); b[7] = (uint8_m)(i >> 56);
+						#endif
+						#ifndef mu_wbe_uint64
+							#define mu_wbe_uint64(b, i) b[7] = (uint8_m)(i >> 0); b[6] = (uint8_m)(i >> 8); b[5] = (uint8_m)(i >> 16); b[4] = (uint8_m)(i >> 24); b[3] = (uint8_m)(i >> 32); b[2] = (uint8_m)(i >> 40); b[1] = (uint8_m)(i >> 48); b[0] = (uint8_m)(i >> 56);
+						#endif
+
+						#ifndef MU_NULL_PTR
+							#define MU_NULL_PTR 0
+						#endif
+
+						#ifndef MU_NULL
+							#define MU_NULL 0
+						#endif
+
+						#ifndef MU_NONE
+							#define MU_NONE MU_SIZE_MAX
+						#endif
+
+						#ifndef MU_SET_RESULT
+							#define MU_SET_RESULT(res, val) if(res!=MU_NULL_PTR){*res=val;}
+						#endif
+
+						#ifndef MU_ASSERT
+							#define MU_ASSERT(cond, res, val, after) if(!(cond)){MU_SET_RESULT(res, val) after}
+						#endif
+
+						#define MU_ENUM(name, ...) enum _##name{__VA_ARGS__};typedef enum _##name _##name; typedef size_m name;
+
+						#if !defined(MU_WIN32) && !defined(MU_UNIX)
+							#if defined(WIN32) || defined(_WIN32)
+								#define MU_WIN32
+							#elif defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+								#define MU_UNIX
+							#endif
+						#endif
+
+						#define MU_HRARRAY_DEFAULT_FUNC(name) \
+							muBool name##_comp(name t0, name t1) { \
+								return t0.active == t1.active; \
+							} \
+							\
+							void name##_on_creation(name* p) { \
+								if (p != MU_NULL_PTR) { \
+									MU_LOCK_CREATE(p->lock, p->lock_active) \
+								} \
+							} \
+							void name##_on_destruction(name* p) { \
+								if (p != MU_NULL_PTR) { \
+									MU_LOCK_DESTROY(p->lock, p->lock_active) \
+								} \
+							} \
+							void name##_on_hold(name* p) { \
+								if (p != MU_NULL_PTR) { \
+									MU_LOCK_LOCK(p->lock, p->lock_active) \
+								} \
+							} \
+							void name##_on_release(name* p) { \
+								if (p != MU_NULL_PTR) { \
+									MU_LOCK_UNLOCK(p->lock, p->lock_active) \
+								} \
+							} \
+							\
+							mu_dynamic_hrarray_declaration( \
+								name##_array, name, name##_, name##_comp, \
+								name##_on_creation, name##_on_destruction, name##_on_hold, name##_on_release \
+							)
+
+						#define MU_SAFEFUNC(result, lib_prefix, context, fail_return) \
+							MU_SET_RESULT(result, lib_prefix##SUCCESS) \
+							MU_ASSERT(context != MU_NULL_PTR, result, lib_prefix##NOT_YET_INITIALIZED, fail_return) \
+
+						#define MU_HOLD(result, item, da, context, lib_prefix, fail_return, da_prefix) \
+							MU_ASSERT(item < da.length, result, lib_prefix##INVALID_ID, fail_return) \
+							da_prefix##hold_element(0, &da, item); \
+							MU_ASSERT(da.data[item].active, result, lib_prefix##INVALID_ID, da_prefix##release_element(0, &da, item); fail_return)
+
+						#define MU_RELEASE(da, item, da_prefix) \
+							da_prefix##release_element(0, &da, item);
+
+					#ifdef __cplusplus
+					}
+					#endif
+
+				#endif /* MUU_H */
+			
+			#ifdef __cplusplus
+				extern "C" {
 			#endif
 
-			#ifndef mu_memcpy
-				#define mu_memcpy memcpy
-			#endif
+			#define MUMA_VERSION_MAJOR 1
+			#define MUMA_VERSION_MINOR 0
+			#define MUMA_VERSION_PATCH 0
 
-		#endif
+			/* C standard library dependencies */
 
-	/* Enums */
+				#if !defined(mu_malloc)  || \
+					!defined(mu_free)    || \
+					!defined(mu_realloc)
 
-		MU_ENUM(mumaResult, 
-			MUMA_SUCCESS,
+					#include <stdlib.h>
 
-			MUMA_FAILED_TO_ALLOCATE,
-			MUMA_INVALID_TYPE_SIZE,
-			MUMA_INVALID_INDEX,
-			MUMA_INVALID_SHIFT_AMOUNT,
-			MUMA_INVALID_COUNT,
-			MUMA_NOT_FOUND
-		)
+					#ifndef mu_malloc
+						#define mu_malloc malloc
+					#endif
 
-	/* Functions */
+					#ifndef mu_free
+						#define mu_free free
+					#endif
 
-		#ifdef MUMA_NAMES
-			MUDEF const char* muma_result_get_name(mumaResult result);
-		#endif
+					#ifndef mu_realloc
+						#define mu_realloc realloc
+					#endif
 
-	/* API macro functionality */
+				#endif
 
-		#define mu_dynamic_array_declaration(struct_name, type, function_name_prefix, type_comparison_func) \
-			\
-			struct struct_name { \
-				type* data; \
-				size_m allocated_length; \
-				size_m length; \
-			}; typedef struct struct_name struct_name; \
-			\
-			struct_name function_name_prefix##create(mumaResult* result, size_m length) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				struct_name s = MU_ZERO_STRUCT(struct_name); \
-				s.data = MU_NULL_PTR; \
-				s.allocated_length = length; \
-				s.length = length; \
-				\
-				if (s.length == 0) { \
-					return s; \
-				} \
-				\
-				s.data = (type*)mu_malloc(sizeof(type)*s.allocated_length); \
-				if (s.data == 0) { \
-					MU_SET_RESULT(result, MUMA_FAILED_TO_ALLOCATE) \
-					s.allocated_length = 0; \
-					s.length = 0; \
-					return s; \
-				} \
-				\
-				mu_memset(s.data, 0, sizeof(type)*s.allocated_length);\
-				return s;\
-			} \
-			\
-			struct_name function_name_prefix##destroy(mumaResult* result, struct_name s) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				if (s.data != MU_NULL_PTR) { \
-					mu_free(s.data); \
-					s.data = MU_NULL_PTR; \
-				} \
-				\
-				s.allocated_length = 0; \
-				s.length = 0; \
-				return s; \
-			} \
-			\
-			struct_name function_name_prefix##resize(mumaResult* result, struct_name s, size_m length) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				if (s.length == length) { \
-					return s; \
-				} \
-				\
-				if (s.data == MU_NULL_PTR) { \
-					if (length == 0) { \
+				#if !defined(mu_memset)  || \
+					!defined(mu_memcpy)  || \
+					!defined(mu_memmove)
+
+					#include <string.h>
+
+					#ifndef mu_memset
+						#define mu_memset memset
+					#endif
+
+					#ifndef mu_memcpy
+						#define mu_memcpy memcpy
+					#endif
+
+					#ifndef mu_memmove
+						#define mu_memmove memmove
+					#endif
+
+				#endif
+
+			/* Enums */
+
+				MU_ENUM(mumaResult, 
+					MUMA_SUCCESS,
+
+					MUMA_FAILED_TO_ALLOCATE,
+					MUMA_INVALID_INDEX,
+					MUMA_INVALID_SHIFT_AMOUNT,
+					MUMA_NOT_FOUND
+				)
+
+			/* Functions */
+
+				#ifdef MUMA_NAMES
+					MUDEF const char* muma_result_get_name(mumaResult result);
+				#endif
+
+			/* API macro functionality */
+
+				#define mu_dynamic_array_declaration(struct_name, type, function_name_prefix, type_comparison_func) \
+					\
+					struct struct_name { \
+						type* data; \
+						size_m allocated_length; \
+						size_m length; \
+					}; typedef struct struct_name struct_name; \
+					\
+					struct_name function_name_prefix##create(mumaResult* result, size_m length) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						struct_name s = MU_ZERO_STRUCT(struct_name); \
+						s.data = MU_NULL_PTR; \
+						s.allocated_length = length; \
+						s.length = length; \
+						\
+						if (s.length == 0) { \
+							return s; \
+						} \
+						\
+						s.data = (type*)mu_malloc(sizeof(type)*s.allocated_length); \
+						if (s.data == 0) { \
+							MU_SET_RESULT(result, MUMA_FAILED_TO_ALLOCATE) \
+							s.allocated_length = 0; \
+							s.length = 0; \
+							return s; \
+						} \
+						\
+						mu_memset(s.data, 0, sizeof(type)*s.allocated_length);\
+						return s;\
+					} \
+					\
+					struct_name function_name_prefix##destroy(mumaResult* result, struct_name s) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						if (s.data != MU_NULL_PTR) { \
+							mu_free(s.data); \
+							s.data = MU_NULL_PTR; \
+						} \
+						\
+						s.allocated_length = 0; \
+						s.length = 0; \
 						return s; \
 					} \
 					\
-					mumaResult res = MUMA_SUCCESS; \
-					s = function_name_prefix##create(&res, length); \
-					if (res != MUMA_SUCCESS) { \
-						MU_SET_RESULT(result, res) \
+					struct_name function_name_prefix##resize(mumaResult* result, struct_name s, size_m length) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						if (s.length == length) { \
+							return s; \
+						} \
+						\
+						if (s.data == MU_NULL_PTR) { \
+							if (length == 0) { \
+								return s; \
+							} \
+							\
+							mumaResult res = MUMA_SUCCESS; \
+							s = function_name_prefix##create(&res, length); \
+							if (res != MUMA_SUCCESS) { \
+								MU_SET_RESULT(result, res) \
+								return s; \
+							} \
+						} \
+						\
+						if (length == 0) { \
+							s.length = 0; \
+							mu_memset(s.data, 0, sizeof(type)*s.allocated_length); \
+							return s; \
+						} \
+						\
+						size_m old_length = s.length; \
+						size_m old_allocated_length = s.allocated_length; \
+						s.length = length; \
+						\
+						if ((s.length > s.allocated_length) || (s.length < s.allocated_length/2)) { \
+							while (s.length > s.allocated_length) { \
+								s.allocated_length *= 2; \
+							} \
+							while (s.length < s.allocated_length/2) { \
+								s.allocated_length /= 2; \
+							} \
+							\
+							type* new_data = (type*)mu_realloc(s.data, sizeof(type) * s.allocated_length); \
+							if (new_data == 0) { \
+								s.length = old_length; \
+								s.allocated_length = old_allocated_length; \
+								MU_SET_RESULT(result, MUMA_FAILED_TO_ALLOCATE) \
+								return s; \
+							} \
+							\
+							s.data = new_data; \
+						} \
+						\
+						if (old_length < s.length) { \
+							mu_memset(&s.data[old_length], 0, sizeof(type)*(s.allocated_length-old_length)); \
+						} \
+						\
 						return s; \
 					} \
-				} \
-				\
-				if (length == 0) { \
-					s.length = 0; \
-					mu_memset(s.data, 0, sizeof(type)*s.allocated_length); \
-					return s; \
-				} \
-				\
-				size_m old_length = s.length; \
-				size_m old_allocated_length = s.allocated_length; \
-				s.length = length; \
-				\
-				if ((s.length > s.allocated_length) || (s.length < s.allocated_length/2)) { \
-					while (s.length > s.allocated_length) { \
-						s.allocated_length *= 2; \
-					} \
-					while (s.length < s.allocated_length/2) { \
-						s.allocated_length /= 2; \
-					} \
 					\
-					type* new_data = (type*)mu_realloc(s.data, sizeof(type) * s.allocated_length); \
-					if (new_data == 0) { \
-						s.length = old_length; \
-						s.allocated_length = old_allocated_length; \
-						MU_SET_RESULT(result, MUMA_FAILED_TO_ALLOCATE) \
+					struct_name function_name_prefix##lshift(mumaResult* result, struct_name s, size_m index, size_m amount) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						if (index >= s.length) { \
+							MU_SET_RESULT(result, MUMA_INVALID_INDEX) \
+							return s; \
+						} \
+						\
+						if (amount == 0) { \
+							return s; \
+						} \
+						\
+						if (amount > index) { \
+							MU_SET_RESULT(result, MUMA_INVALID_SHIFT_AMOUNT) \
+							return s; \
+						} \
+						\
+						mu_memmove(&s.data[index-amount], &s.data[index], sizeof(type)*(s.length-index)); \
+						\
+						mumaResult res = MUMA_SUCCESS; \
+						s = function_name_prefix##resize(&res, s, s.length-amount); \
+						if (res != MUMA_SUCCESS) { \
+							MU_SET_RESULT(result, res) \
+							return s; \
+						} \
+						\
 						return s; \
 					} \
 					\
-					s.data = new_data; \
-				} \
-				\
-				if (old_length < s.length) { \
-					mu_memset(&s.data[old_length], 0, sizeof(type)*(s.allocated_length-old_length)); \
-				} \
-				\
-				return s; \
-			} \
-			\
-			struct_name function_name_prefix##lshift(mumaResult* result, struct_name s, size_m index, size_m amount) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				if (index >= s.length) { \
-					MU_SET_RESULT(result, MUMA_INVALID_INDEX) \
-					return s; \
-				} \
-				\
-				if (amount == 0) { \
-					return s; \
-				} \
-				\
-				if (amount > index) { \
-					MU_SET_RESULT(result, MUMA_INVALID_SHIFT_AMOUNT) \
-					return s; \
-				} \
-				\
-				mu_memcpy(&s.data[index-amount], &s.data[index], sizeof(type)*(s.length-index)); \
-				\
-				mumaResult res = MUMA_SUCCESS; \
-				s = function_name_prefix##resize(&res, s, s.length-amount); \
-				if (res != MUMA_SUCCESS) { \
-					MU_SET_RESULT(result, res) \
-					return s; \
-				} \
-				\
-				return s; \
-			} \
-			\
-			struct_name function_name_prefix##rshift(mumaResult* result, struct_name s, size_m index, size_m amount) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				if (index >= s.length) { \
-					MU_SET_RESULT(result, MUMA_INVALID_INDEX) \
-					return s; \
-				} \
-				\
-				if (amount == 0) { \
-					return s; \
-				} \
-				\
-				mumaResult res = MUMA_SUCCESS; \
-				s = function_name_prefix##resize(&res, s, s.length+amount); \
-				if (res != MUMA_SUCCESS) { \
-					MU_SET_RESULT(result, res) \
-					return s; \
-				} \
-				\
-				mu_memcpy(&s.data[index+amount], &s.data[index], sizeof(type)*(s.length-index)); \
-				mu_memset(&s.data[index], 0, sizeof(type)*(amount)); \
-				\
-				return s; \
-			} \
-			\
-			struct_name function_name_prefix##multiinsert(mumaResult* result, struct_name s, size_m index, type* insert, size_m count) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				mumaResult res = MUMA_SUCCESS; \
-				s = function_name_prefix##rshift(&res, s, index, count); \
-				if (res != MUMA_SUCCESS) { \
-					MU_SET_RESULT(result, res) \
-					return s; \
-				} \
-				\
-				mu_memcpy(&s.data[index], insert, sizeof(type)*count); \
-				return s; \
-			} \
-			\
-			struct_name function_name_prefix##insert(mumaResult* result, struct_name s, size_m index, type insert) { \
-				return function_name_prefix##multiinsert(result, s, index, &insert, 1); \
-			} \
-			\
-			struct_name function_name_prefix##multierase(mumaResult* result, struct_name s, size_m index, size_m count) { \
-				return function_name_prefix##lshift(result, s, index+count, count); \
-			} \
-			\
-			struct_name function_name_prefix##erase(mumaResult* result, struct_name s, size_m index) { \
-				return function_name_prefix##multierase(result, s, index, 1); \
-			} \
-			struct_name function_name_prefix##clear(mumaResult* result, struct_name s) { \
-				return function_name_prefix##destroy(result, s); \
-			} \
-			\
-			struct_name function_name_prefix##multipush(mumaResult* result, struct_name s, type* push, size_m count) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				mumaResult res = MUMA_SUCCESS; \
-				s = function_name_prefix##resize(&res, s, s.length+count); \
-				if (res != MUMA_SUCCESS) { \
-					MU_SET_RESULT(result, res) \
-					return s; \
-				} \
-				\
-				mu_memcpy(&s.data[s.length-count], push, sizeof(type)*count); \
-				return s; \
-			} \
-			\
-			struct_name function_name_prefix##push(mumaResult* result, struct_name s, type push) { \
-				return function_name_prefix##multipush(result, s, &push, 1); \
-			} \
-			\
-			struct_name function_name_prefix##multipop(mumaResult* result, struct_name s, size_m count) { \
-				return function_name_prefix##resize(result, s, s.length-count); \
-			} \
-			\
-			struct_name function_name_prefix##pop(mumaResult* result, struct_name s) { \
-				return function_name_prefix##multipop(result, s, 1); \
-			} \
-			\
-			size_m function_name_prefix##find(mumaResult* result, struct_name s, type find) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				for (size_m i = 0; i < s.length; i++) { \
-					if (type_comparison_func(find, s.data[i])) { \
-						return i; \
+					struct_name function_name_prefix##rshift(mumaResult* result, struct_name s, size_m index, size_m amount) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						if (index >= s.length) { \
+							MU_SET_RESULT(result, MUMA_INVALID_INDEX) \
+							return s; \
+						} \
+						\
+						if (amount == 0) { \
+							return s; \
+						} \
+						\
+						mumaResult res = MUMA_SUCCESS; \
+						s = function_name_prefix##resize(&res, s, s.length+amount); \
+						if (res != MUMA_SUCCESS) { \
+							MU_SET_RESULT(result, res) \
+							return s; \
+						} \
+						\
+						/* I have genuinely no idea why it needs to have a -1. It crashes if you don't. */\
+						/* And lshift doesn't need one. Why?? */ \
+						mu_memmove(&s.data[index+amount], &s.data[index], sizeof(type)*((s.length-index)-1)); \
+						mu_memset(&s.data[index], 0, sizeof(type)*(amount)); \
+						\
+						return s; \
 					} \
-				} \
-				\
-				MU_SET_RESULT(result, MUMA_NOT_FOUND) \
-				return MU_NONE; \
-			} \
-			\
-			struct_name function_name_prefix##find_push(mumaResult* result, struct_name s, type find, size_m* p_index) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				mumaResult res = MUMA_SUCCESS; \
-				size_m index = function_name_prefix##find(&res, s, find); \
-				if (index != MU_NONE) { \
-					if (p_index != MU_NULL_PTR) { \
-						*p_index = index; \
+					\
+					struct_name function_name_prefix##multiinsert(mumaResult* result, struct_name s, size_m index, type* insert, size_m count) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						mumaResult res = MUMA_SUCCESS; \
+						s = function_name_prefix##rshift(&res, s, index, count); \
+						if (res != MUMA_SUCCESS) { \
+							MU_SET_RESULT(result, res) \
+							return s; \
+						} \
+						\
+						mu_memcpy(&s.data[index], insert, sizeof(type)*count); \
+						return s; \
 					} \
-					return s; \
-				} \
-				if (res != MUMA_SUCCESS && res != MUMA_NOT_FOUND) { \
-					if (p_index != MU_NULL_PTR) { \
-						*p_index = MU_NONE; \
+					\
+					struct_name function_name_prefix##insert(mumaResult* result, struct_name s, size_m index, type insert) { \
+						return function_name_prefix##multiinsert(result, s, index, &insert, 1); \
 					} \
-					MU_SET_RESULT(result, res) \
-					return s; \
-				} \
-				\
-				s = function_name_prefix##push(&res, s, find); \
-				if (res != MUMA_SUCCESS) { \
-					if (p_index != MU_NULL_PTR) { \
-						*p_index = MU_NONE; \
+					\
+					struct_name function_name_prefix##multierase(mumaResult* result, struct_name s, size_m index, size_m count) { \
+						return function_name_prefix##lshift(result, s, index+count, count); \
 					} \
-					MU_SET_RESULT(result, res) \
-					return s; \
-				} \
-				\
-				if (p_index != MU_NULL_PTR) { \
-					*p_index = s.length-1; \
-				} \
-				return s; \
-			}
+					\
+					struct_name function_name_prefix##erase(mumaResult* result, struct_name s, size_m index) { \
+						return function_name_prefix##multierase(result, s, index, 1); \
+					} \
+					struct_name function_name_prefix##clear(mumaResult* result, struct_name s) { \
+						return function_name_prefix##destroy(result, s); \
+					} \
+					\
+					struct_name function_name_prefix##multipush(mumaResult* result, struct_name s, type* push, size_m count) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						mumaResult res = MUMA_SUCCESS; \
+						s = function_name_prefix##resize(&res, s, s.length+count); \
+						if (res != MUMA_SUCCESS) { \
+							MU_SET_RESULT(result, res) \
+							return s; \
+						} \
+						\
+						mu_memcpy(&s.data[s.length-count], push, sizeof(type)*count); \
+						return s; \
+					} \
+					\
+					struct_name function_name_prefix##push(mumaResult* result, struct_name s, type push) { \
+						return function_name_prefix##multipush(result, s, &push, 1); \
+					} \
+					\
+					struct_name function_name_prefix##multipop(mumaResult* result, struct_name s, size_m count) { \
+						return function_name_prefix##resize(result, s, s.length-count); \
+					} \
+					\
+					struct_name function_name_prefix##pop(mumaResult* result, struct_name s) { \
+						return function_name_prefix##multipop(result, s, 1); \
+					} \
+					\
+					size_m function_name_prefix##find(mumaResult* result, struct_name s, type find) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						for (size_m i = 0; i < s.length; i++) { \
+							if (type_comparison_func(find, s.data[i])) { \
+								return i; \
+							} \
+						} \
+						\
+						MU_SET_RESULT(result, MUMA_NOT_FOUND) \
+						return MU_NONE; \
+					} \
+					\
+					struct_name function_name_prefix##find_push(mumaResult* result, struct_name s, type find, size_m* p_index) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						mumaResult res = MUMA_SUCCESS; \
+						size_m index = function_name_prefix##find(&res, s, find); \
+						if (index != MU_NONE) { \
+							if (p_index != MU_NULL_PTR) { \
+								*p_index = index; \
+							} \
+							return s; \
+						} \
+						if (res != MUMA_SUCCESS && res != MUMA_NOT_FOUND) { \
+							if (p_index != MU_NULL_PTR) { \
+								*p_index = MU_NONE; \
+							} \
+							MU_SET_RESULT(result, res) \
+							return s; \
+						} \
+						\
+						s = function_name_prefix##push(&res, s, find); \
+						if (res != MUMA_SUCCESS) { \
+							if (p_index != MU_NULL_PTR) { \
+								*p_index = MU_NONE; \
+							} \
+							MU_SET_RESULT(result, res) \
+							return s; \
+						} \
+						\
+						if (p_index != MU_NULL_PTR) { \
+							*p_index = s.length-1; \
+						} \
+						return s; \
+					}
 
-		#define mu_dynamic_hrarray_declaration( \
-			struct_name, type, function_name_prefix, type_comparison_func, \
-			on_creation, on_destruction, on_hold, on_release \
-		) \
-			\
-			struct struct_name { \
-				type* data; \
-				size_m allocated_length; \
-				size_m length; \
-			}; typedef struct struct_name struct_name; \
-			\
-			struct_name function_name_prefix##create(mumaResult* result, size_m length) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				struct_name s = MU_ZERO_STRUCT(struct_name); \
-				s.data = MU_NULL_PTR; \
-				s.allocated_length = length; \
-				s.length = length; \
-				\
-				if (s.length == 0) { \
-					return s; \
-				} \
-				\
-				s.data = (type*)mu_malloc(sizeof(type)*s.allocated_length); \
-				if (s.data == 0) { \
-					MU_SET_RESULT(result, MUMA_FAILED_TO_ALLOCATE) \
-					s.allocated_length = 0; \
-					s.length = 0; \
-					return s; \
-				} \
-				\
-				mu_memset(s.data, 0, sizeof(type)*s.allocated_length); \
-				\
-				for (size_m i = 0; i < s.length; i++) { \
-					on_creation(&s.data[i]); \
-				} \
-				return s;\
-			} \
-			\
-			void function_name_prefix##hold_element(mumaResult* result, struct_name* s, size_m index) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				if (index >= s->length) { \
-					MU_SET_RESULT(result, MUMA_INVALID_INDEX) \
-					return; \
-				} \
-				\
-				on_hold(&s->data[index]); \
-			} \
-			\
-			void function_name_prefix##release_element(mumaResult* result, struct_name* s, size_m index) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				if (index >= s->length) { \
-					MU_SET_RESULT(result, MUMA_INVALID_INDEX) \
-					return; \
-				} \
-				\
-				on_release(&s->data[index]); \
-			} \
-			\
-			void function_name_prefix##destroy(mumaResult* result, struct_name* s) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				for (size_m i = 0; i < s->length; i++) { \
-					function_name_prefix##hold_element(0, s, i); \
-				} \
-				\
-				for (size_m i = 0; i < s->length; i++) { \
-					on_destruction(&s->data[i]); \
-				} \
-				\
-				if (s->data != MU_NULL_PTR) { \
-					mu_free(s->data); \
-					s->data = MU_NULL_PTR; \
-				} \
-				\
-				s->allocated_length = 0; \
-				s->length = 0; \
-			} \
-			\
-			void function_name_prefix##inner_resize(mumaResult* result, struct_name* s, size_m length, muBool cd) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				if (s->length == length) { \
-					return; \
-				} \
-				\
-				if (s->data == MU_NULL_PTR) { \
-					if (length == 0) { \
-						return; \
+				#define mu_dynamic_hrarray_declaration( \
+					struct_name, type, function_name_prefix, type_comparison_func, \
+					on_creation, on_destruction, on_hold, on_release \
+				) \
+					\
+					struct struct_name { \
+						type* data; \
+						size_m allocated_length; \
+						size_m length; \
+					}; typedef struct struct_name struct_name; \
+					\
+					struct_name function_name_prefix##create(mumaResult* result, size_m length) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						struct_name s = MU_ZERO_STRUCT(struct_name); \
+						s.data = MU_NULL_PTR; \
+						s.allocated_length = length; \
+						s.length = length; \
+						\
+						if (s.length == 0) { \
+							return s; \
+						} \
+						\
+						s.data = (type*)mu_malloc(sizeof(type)*s.allocated_length); \
+						if (s.data == 0) { \
+							MU_SET_RESULT(result, MUMA_FAILED_TO_ALLOCATE) \
+							s.allocated_length = 0; \
+							s.length = 0; \
+							return s; \
+						} \
+						\
+						mu_memset(s.data, 0, sizeof(type)*s.allocated_length); \
+						\
+						for (size_m i = 0; i < s.length; i++) { \
+							on_creation(&s.data[i]); \
+						} \
+						return s;\
 					} \
 					\
-					mumaResult res = MUMA_SUCCESS; \
-					*s = function_name_prefix##create(&res, length); \
-					if (res != MUMA_SUCCESS) { \
-						MU_SET_RESULT(result, res) \
-						return; \
-					} \
-				} \
-				\
-				if (length == 0) { \
-					for (size_m i = 0; i < s->length; i++) { \
-						on_destruction(&s->data[i]); \
-					} \
-					s->length = 0; \
-					mu_memset(s->data, 0, sizeof(type)*s->allocated_length); \
-					return; \
-				} \
-				\
-				if (cd) { \
-					for (size_m i = 0; i < s->length; i++) { \
-						function_name_prefix##hold_element(0, s, i); \
-					} \
-				} \
-				\
-				size_m old_length = s->length; \
-				size_m old_allocated_length = s->allocated_length; \
-				s->length = length; \
-				\
-				/* Note: this is really dangerous, because it's not guaranteed that the  */ \
-				/* reallocation will follow through. If it doesn't, we've now called the */ \
-				/* destroy function on a bunch of elements that still exist. I can't     */ \
-				/* really think of a better way of doing it than this right now, though. */ \
-				if (cd && old_length > s->length) { \
-					for (size_m i = s->length; i < old_length; i++) { \
-						on_destruction(&s->data[i]); \
-					} \
-				} \
-				\
-				if ((s->length > s->allocated_length) || (s->length < s->allocated_length/2)) { \
-					while (s->length > s->allocated_length) { \
-						s->allocated_length *= 2; \
-					} \
-					while (s->length < s->allocated_length/2) { \
-						s->allocated_length /= 2; \
+					void function_name_prefix##hold_element(mumaResult* result, struct_name* s, size_m index) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						if (index >= s->length) { \
+							MU_SET_RESULT(result, MUMA_INVALID_INDEX) \
+							return; \
+						} \
+						\
+						on_hold(&s->data[index]); \
 					} \
 					\
-					type* new_data = (type*)mu_realloc(s->data, sizeof(type) * s->allocated_length); \
-					if (new_data == 0) { \
-						s->length = old_length; \
-						s->allocated_length = old_allocated_length; \
+					void function_name_prefix##release_element(mumaResult* result, struct_name* s, size_m index) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						if (index >= s->length) { \
+							MU_SET_RESULT(result, MUMA_INVALID_INDEX) \
+							return; \
+						} \
+						\
+						on_release(&s->data[index]); \
+					} \
+					\
+					void function_name_prefix##destroy(mumaResult* result, struct_name* s) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						for (size_m i = 0; i < s->length; i++) { \
+							function_name_prefix##hold_element(0, s, i); \
+						} \
+						\
+						for (size_m i = 0; i < s->length; i++) { \
+							on_destruction(&s->data[i]); \
+						} \
+						\
+						if (s->data != MU_NULL_PTR) { \
+							mu_free(s->data); \
+							s->data = MU_NULL_PTR; \
+						} \
+						\
+						s->allocated_length = 0; \
+						s->length = 0; \
+					} \
+					\
+					void function_name_prefix##inner_resize(mumaResult* result, struct_name* s, size_m length, muBool cd) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						if (s->length == length) { \
+							return; \
+						} \
+						\
+						if (s->data == MU_NULL_PTR) { \
+							if (length == 0) { \
+								return; \
+							} \
+							\
+							mumaResult res = MUMA_SUCCESS; \
+							*s = function_name_prefix##create(&res, length); \
+							if (res != MUMA_SUCCESS) { \
+								MU_SET_RESULT(result, res) \
+								return; \
+							} \
+						} \
+						\
+						if (length == 0) { \
+							for (size_m i = 0; i < s->length; i++) { \
+								on_destruction(&s->data[i]); \
+							} \
+							s->length = 0; \
+							mu_memset(s->data, 0, sizeof(type)*s->allocated_length); \
+							return; \
+						} \
+						\
+						if (cd) { \
+							for (size_m i = 0; i < s->length; i++) { \
+								function_name_prefix##hold_element(0, s, i); \
+							} \
+						} \
+						\
+						size_m old_length = s->length; \
+						size_m old_allocated_length = s->allocated_length; \
+						s->length = length; \
+						\
+						/* Note: this is really dangerous, because it's not guaranteed that the  */ \
+						/* reallocation will follow through. If it doesn't, we've now called the */ \
+						/* destroy function on a bunch of elements that still exist. I can't     */ \
+						/* really think of a better way of doing it than this right now, though. */ \
+						if (cd && old_length > s->length) { \
+							for (size_m i = s->length; i < old_length; i++) { \
+								on_destruction(&s->data[i]); \
+							} \
+						} \
+						\
+						if ((s->length > s->allocated_length) || (s->length < s->allocated_length/2)) { \
+							while (s->length > s->allocated_length) { \
+								s->allocated_length *= 2; \
+							} \
+							while (s->length < s->allocated_length/2) { \
+								s->allocated_length /= 2; \
+							} \
+							\
+							type* new_data = (type*)mu_realloc(s->data, sizeof(type) * s->allocated_length); \
+							if (new_data == 0) { \
+								s->length = old_length; \
+								s->allocated_length = old_allocated_length; \
+								if (cd) { \
+									for (size_m i = 0; i < s->length; i++) { \
+										function_name_prefix##release_element(0, s, i); \
+									} \
+								} \
+								MU_SET_RESULT(result, MUMA_FAILED_TO_ALLOCATE) \
+								return; \
+							} \
+							\
+							s->data = new_data; \
+						} \
+						\
+						if (old_length < s->length) { \
+							mu_memset(&s->data[old_length], 0, sizeof(type)*(s->allocated_length-old_length)); \
+							\
+							if (cd) { \
+								for (size_m i = old_length; i < s->length; i++) { \
+									on_creation(&s->data[i]); \
+								} \
+							} \
+						} \
+						\
+						if (cd) { \
+							for (size_m i = 0; i < s->length && i < old_length; i++) { \
+								function_name_prefix##release_element(0, s, i); \
+							} \
+						} \
+					} \
+					\
+					void function_name_prefix##resize(mumaResult* result, struct_name* s, size_m length) { \
+						function_name_prefix##inner_resize(result, s, length, MU_TRUE); \
+					} \
+					\
+					void function_name_prefix##inner_lshift(mumaResult* result, struct_name* s, size_m index, size_m amount, muBool cd) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						if (index >= s->length) { \
+							MU_SET_RESULT(result, MUMA_INVALID_INDEX) \
+							return; \
+						} \
+						\
+						if (amount == 0) { \
+							return; \
+						} \
+						\
+						if (amount > index) { \
+							MU_SET_RESULT(result, MUMA_INVALID_SHIFT_AMOUNT) \
+							return; \
+						} \
+						\
+						if (cd) { \
+							for (size_m i = 0; i < s->length; i++) { \
+								function_name_prefix##hold_element(0, s, i); \
+							} \
+						} \
+						\
+						/* Dangerous; resize may fail after this */ \
+						if (cd) { \
+							for (size_m i = index-amount; i < index; i++) { \
+								on_destruction(&s->data[i]); \
+							} \
+						} \
+						\
+						mu_memmove(&s->data[index-amount], &s->data[index], sizeof(type)*(s->length-index)); \
+						\
+						mumaResult res = MUMA_SUCCESS; \
+						function_name_prefix##inner_resize(&res, s, s->length-amount, MU_FALSE); \
+						\
 						if (cd) { \
 							for (size_m i = 0; i < s->length; i++) { \
 								function_name_prefix##release_element(0, s, i); \
 							} \
 						} \
-						MU_SET_RESULT(result, MUMA_FAILED_TO_ALLOCATE) \
-						return; \
+						\
+						if (res != MUMA_SUCCESS) { \
+							MU_SET_RESULT(result, res) \
+							return; \
+						} \
 					} \
 					\
-					s->data = new_data; \
-				} \
-				\
-				if (old_length < s->length) { \
-					mu_memset(&s->data[old_length], 0, sizeof(type)*(s->allocated_length-old_length)); \
+					void function_name_prefix##lshift(mumaResult* result, struct_name* s, size_m index, size_m amount) { \
+						function_name_prefix##inner_lshift(result, s, index, amount, MU_TRUE); \
+					} \
 					\
-					if (cd) { \
-						for (size_m i = old_length; i < s->length; i++) { \
+					void function_name_prefix##inner_rshift(mumaResult* result, struct_name* s, size_m index, size_m amount, muBool cd) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						if (index >= s->length) { \
+							MU_SET_RESULT(result, MUMA_INVALID_INDEX) \
+							return; \
+						} \
+						\
+						if (amount == 0) { \
+							return; \
+						} \
+						\
+						if (cd) { \
+							for (size_m i = 0; i < s->length; i++) { \
+								function_name_prefix##hold_element(0, s, i); \
+							} \
+						} \
+						\
+						mumaResult res = MUMA_SUCCESS; \
+						function_name_prefix##inner_resize(&res, s, s->length+amount, MU_FALSE); \
+						if (res != MUMA_SUCCESS) { \
+							if (cd) { \
+								for (size_m i = 0; i < s->length; i++) { \
+									function_name_prefix##release_element(0, s, i); \
+								} \
+							} \
+							MU_SET_RESULT(result, res) \
+							return; \
+						} \
+						\
+						mu_memmove(&s->data[index+amount], &s->data[index], sizeof(type)*((s->length-index)-1)); \
+						\
+						if (cd) { \
+							for (size_m i = 0; i < index; i++) { \
+								function_name_prefix##release_element(0, s, i); \
+							} \
+							for (size_m i = index+amount; i < s->length; i++) { \
+								function_name_prefix##release_element(0, s, i); \
+							} \
+						} \
+						\
+						mu_memset(&s->data[index], 0, sizeof(type)*(amount)); \
+						\
+						if (cd) { \
+							for (size_m i = index; i < index+amount; i++) { \
+								on_creation(&s->data[i]); \
+							} \
+						} \
+					} \
+					\
+					void function_name_prefix##rshift(mumaResult* result, struct_name* s, size_m index, size_m amount) { \
+						function_name_prefix##inner_rshift(result, s, index, amount, MU_TRUE); \
+					} \
+					\
+					void function_name_prefix##multiinsert(mumaResult* result, struct_name* s, size_m index, type* insert, size_m count) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						for (size_m i = 0; i < s->length; i++) { \
+							function_name_prefix##hold_element(0, s, i); \
+						} \
+						\
+						mumaResult res = MUMA_SUCCESS; \
+						function_name_prefix##inner_rshift(&res, s, index, count, MU_FALSE); \
+						if (res != MUMA_SUCCESS) { \
+							for (size_m i = 0; i < s->length; i++) { \
+								function_name_prefix##release_element(0, s, i); \
+							} \
+							MU_SET_RESULT(result, res) \
+							return; \
+						} \
+						\
+						mu_memcpy(&s->data[index], insert, sizeof(type)*count); \
+						\
+						for (size_m i = 0; i < index; i++) { \
+							function_name_prefix##release_element(0, s, i); \
+						} \
+						for (size_m i = index+count; i < s->length; i++) { \
+							function_name_prefix##release_element(0, s, i); \
+						} \
+						\
+						for (size_m i = index; i < index+count; i++) { \
 							on_creation(&s->data[i]); \
 						} \
 					} \
-				} \
-				\
-				if (cd) { \
-					for (size_m i = 0; i < s->length && i < old_length; i++) { \
-						function_name_prefix##release_element(0, s, i); \
+					\
+					void function_name_prefix##insert(mumaResult* result, struct_name* s, size_m index, type insert) { \
+						function_name_prefix##multiinsert(result, s, index, &insert, 1); \
 					} \
-				} \
-			} \
-			\
-			void function_name_prefix##resize(mumaResult* result, struct_name* s, size_m length) { \
-				function_name_prefix##inner_resize(result, s, length, MU_TRUE); \
-			} \
-			\
-			void function_name_prefix##inner_lshift(mumaResult* result, struct_name* s, size_m index, size_m amount, muBool cd) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				if (index >= s->length) { \
-					MU_SET_RESULT(result, MUMA_INVALID_INDEX) \
-					return; \
-				} \
-				\
-				if (amount == 0) { \
-					return; \
-				} \
-				\
-				if (amount > index) { \
-					MU_SET_RESULT(result, MUMA_INVALID_SHIFT_AMOUNT) \
-					return; \
-				} \
-				\
-				if (cd) { \
-					for (size_m i = 0; i < s->length; i++) { \
-						function_name_prefix##hold_element(0, s, i); \
+					\
+					void function_name_prefix##multierase(mumaResult* result, struct_name* s, size_m index, size_m count) { \
+						function_name_prefix##lshift(result, s, index+count, count); \
 					} \
-				} \
-				\
-				/* Dangerous; resize may fail after this */ \
-				if (cd) { \
-					for (size_m i = index-amount; i < index; i++) { \
-						on_destruction(&s->data[i]); \
+					\
+					void function_name_prefix##erase(mumaResult* result, struct_name* s, size_m index) { \
+						function_name_prefix##multierase(result, s, index, 1); \
 					} \
-				} \
-				\
-				mu_memcpy(&s->data[index-amount], &s->data[index], sizeof(type)*(s->length-index)); \
-				\
-				mumaResult res = MUMA_SUCCESS; \
-				function_name_prefix##inner_resize(&res, s, s->length-amount, MU_FALSE); \
-				\
-				if (cd) { \
-					for (size_m i = 0; i < s->length; i++) { \
-						function_name_prefix##release_element(0, s, i); \
+					void function_name_prefix##clear(mumaResult* result, struct_name* s) { \
+						function_name_prefix##destroy(result, s); \
 					} \
-				} \
-				\
-				if (res != MUMA_SUCCESS) { \
-					MU_SET_RESULT(result, res) \
-					return; \
-				} \
-			} \
-			\
-			void function_name_prefix##lshift(mumaResult* result, struct_name* s, size_m index, size_m amount) { \
-				function_name_prefix##inner_lshift(result, s, index, amount, MU_TRUE); \
-			} \
-			\
-			void function_name_prefix##inner_rshift(mumaResult* result, struct_name* s, size_m index, size_m amount, muBool cd) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				if (index >= s->length) { \
-					MU_SET_RESULT(result, MUMA_INVALID_INDEX) \
-					return; \
-				} \
-				\
-				if (amount == 0) { \
-					return; \
-				} \
-				\
-				if (cd) { \
-					for (size_m i = 0; i < s->length; i++) { \
-						function_name_prefix##hold_element(0, s, i); \
-					} \
-				} \
-				\
-				mumaResult res = MUMA_SUCCESS; \
-				function_name_prefix##inner_resize(&res, s, s->length+amount, MU_FALSE); \
-				if (res != MUMA_SUCCESS) { \
-					if (cd) { \
+					\
+					void function_name_prefix##multipush(mumaResult* result, struct_name* s, type* push, size_m count) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						size_m old_length = s->length; \
 						for (size_m i = 0; i < s->length; i++) { \
+							function_name_prefix##hold_element(0, s, i); \
+						} \
+						\
+						mumaResult res = MUMA_SUCCESS; \
+						function_name_prefix##inner_resize(&res, s, s->length+count, MU_FALSE); \
+						if (res != MUMA_SUCCESS) { \
+							for (size_m i = 0; i < s->length; i++) { \
+								function_name_prefix##release_element(0, s, i); \
+							} \
+							MU_SET_RESULT(result, res) \
+							return; \
+						} \
+						\
+						mu_memcpy(&s->data[s->length-count], push, sizeof(type)*count); \
+						\
+						for (size_m i = 0; i < old_length; i++) { \
 							function_name_prefix##release_element(0, s, i); \
 						} \
+						\
+						for (size_m i = s->length-count; i < s->length; i++) { \
+							on_creation(&s->data[i]); \
+						} \
 					} \
-					MU_SET_RESULT(result, res) \
-					return; \
-				} \
-				\
-				mu_memcpy(&s->data[index+amount], &s->data[index], sizeof(type)*(s->length-index)); \
-				\
-				if (cd) { \
-					for (size_m i = 0; i < index; i++) { \
-						function_name_prefix##release_element(0, s, i); \
+					\
+					void function_name_prefix##push(mumaResult* result, struct_name* s, type push) { \
+						function_name_prefix##multipush(result, s, &push, 1); \
 					} \
-					for (size_m i = index+amount; i < s->length; i++) { \
-						function_name_prefix##release_element(0, s, i); \
+					\
+					void function_name_prefix##multipop(mumaResult* result, struct_name* s, size_m count) { \
+						function_name_prefix##resize(result, s, s->length-count); \
 					} \
-				} \
-				\
-				mu_memset(&s->data[index], 0, sizeof(type)*(amount)); \
-				\
-				if (cd) { \
-					for (size_m i = index; i < index+amount; i++) { \
-						on_creation(&s->data[i]); \
+					\
+					void function_name_prefix##pop(mumaResult* result, struct_name* s) { \
+						function_name_prefix##multipop(result, s, 1); \
 					} \
-				} \
-			} \
-			\
-			void function_name_prefix##rshift(mumaResult* result, struct_name* s, size_m index, size_m amount) { \
-				function_name_prefix##inner_rshift(result, s, index, amount, MU_TRUE); \
-			} \
-			\
-			void function_name_prefix##multiinsert(mumaResult* result, struct_name* s, size_m index, type* insert, size_m count) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				for (size_m i = 0; i < s->length; i++) { \
-					function_name_prefix##hold_element(0, s, i); \
-				} \
-				\
-				mumaResult res = MUMA_SUCCESS; \
-				function_name_prefix##inner_rshift(&res, s, index, count, MU_FALSE); \
-				if (res != MUMA_SUCCESS) { \
-					for (size_m i = 0; i < s->length; i++) { \
-						function_name_prefix##release_element(0, s, i); \
+					\
+					size_m function_name_prefix##find(mumaResult* result, struct_name* s, type find) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						for (size_m i = 0; i < s->length; i++) { \
+							function_name_prefix##hold_element(0, s, i); \
+							if (type_comparison_func(find, s->data[i])) { \
+								function_name_prefix##release_element(0, s, i); \
+								return i; \
+							} \
+							function_name_prefix##release_element(0, s, i); \
+						} \
+						\
+						MU_SET_RESULT(result, MUMA_NOT_FOUND) \
+						return MU_NONE; \
 					} \
-					MU_SET_RESULT(result, res) \
-					return; \
-				} \
-				\
-				mu_memcpy(&s->data[index], insert, sizeof(type)*count); \
-				\
-				for (size_m i = 0; i < index; i++) { \
-					function_name_prefix##release_element(0, s, i); \
-				} \
-				for (size_m i = index+count; i < s->length; i++) { \
-					function_name_prefix##release_element(0, s, i); \
-				} \
-				\
-				for (size_m i = index; i < index+count; i++) { \
-					on_creation(&s->data[i]); \
-				} \
-			} \
-			\
-			void function_name_prefix##insert(mumaResult* result, struct_name* s, size_m index, type insert) { \
-				function_name_prefix##multiinsert(result, s, index, &insert, 1); \
-			} \
-			\
-			void function_name_prefix##multierase(mumaResult* result, struct_name* s, size_m index, size_m count) { \
-				function_name_prefix##lshift(result, s, index+count, count); \
-			} \
-			\
-			void function_name_prefix##erase(mumaResult* result, struct_name* s, size_m index) { \
-				function_name_prefix##multierase(result, s, index, 1); \
-			} \
-			void function_name_prefix##clear(mumaResult* result, struct_name* s) { \
-				function_name_prefix##destroy(result, s); \
-			} \
-			\
-			void function_name_prefix##multipush(mumaResult* result, struct_name* s, type* push, size_m count) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				size_m old_length = s->length; \
-				for (size_m i = 0; i < s->length; i++) { \
-					function_name_prefix##hold_element(0, s, i); \
-				} \
-				\
-				mumaResult res = MUMA_SUCCESS; \
-				function_name_prefix##inner_resize(&res, s, s->length+count, MU_FALSE); \
-				if (res != MUMA_SUCCESS) { \
-					for (size_m i = 0; i < s->length; i++) { \
-						function_name_prefix##release_element(0, s, i); \
-					} \
-					MU_SET_RESULT(result, res) \
-					return; \
-				} \
-				\
-				mu_memcpy(&s->data[s->length-count], push, sizeof(type)*count); \
-				\
-				for (size_m i = 0; i < old_length; i++) { \
-					function_name_prefix##release_element(0, s, i); \
-				} \
-				\
-				for (size_m i = s->length-count; i < s->length; i++) { \
-					on_creation(&s->data[i]); \
-				} \
-			} \
-			\
-			void function_name_prefix##push(mumaResult* result, struct_name* s, type push) { \
-				function_name_prefix##multipush(result, s, &push, 1); \
-			} \
-			\
-			void function_name_prefix##multipop(mumaResult* result, struct_name* s, size_m count) { \
-				function_name_prefix##resize(result, s, s->length-count); \
-			} \
-			\
-			void function_name_prefix##pop(mumaResult* result, struct_name* s) { \
-				function_name_prefix##multipop(result, s, 1); \
-			} \
-			\
-			size_m function_name_prefix##find(mumaResult* result, struct_name* s, type find) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				for (size_m i = 0; i < s->length; i++) { \
-					function_name_prefix##hold_element(0, s, i); \
-					if (type_comparison_func(find, s->data[i])) { \
-						function_name_prefix##release_element(0, s, i); \
-						return i; \
-					} \
-					function_name_prefix##release_element(0, s, i); \
-				} \
-				\
-				MU_SET_RESULT(result, MUMA_NOT_FOUND) \
-				return MU_NONE; \
-			} \
-			\
-			void function_name_prefix##find_push(mumaResult* result, struct_name* s, type find, size_m* p_index) { \
-				MU_SET_RESULT(result, MUMA_SUCCESS) \
-				\
-				mumaResult res = MUMA_SUCCESS; \
-				size_m index = function_name_prefix##find(&res, s, find); \
-				if (index != MU_NONE) { \
-					if (p_index != MU_NULL_PTR) { \
-						*p_index = index; \
-					} \
-					return; \
-				} \
-				if (res != MUMA_SUCCESS && res != MUMA_NOT_FOUND) { \
-					if (p_index != MU_NULL_PTR) { \
-						*p_index = MU_NONE; \
-					} \
-					MU_SET_RESULT(result, res) \
-					return; \
-				} \
-				\
-				function_name_prefix##push(&res, s, find); \
-				if (res != MUMA_SUCCESS) { \
-					if (p_index != MU_NULL_PTR) { \
-						*p_index = MU_NONE; \
-					} \
-					MU_SET_RESULT(result, res) \
-					return; \
-				} \
-				\
-				if (p_index != MU_NULL_PTR) { \
-					*p_index = s->length-1; \
-				} \
-			}
+					\
+					void function_name_prefix##find_push(mumaResult* result, struct_name* s, type find, size_m* p_index) { \
+						MU_SET_RESULT(result, MUMA_SUCCESS) \
+						\
+						mumaResult res = MUMA_SUCCESS; \
+						size_m index = function_name_prefix##find(&res, s, find); \
+						if (index != MU_NONE) { \
+							if (p_index != MU_NULL_PTR) { \
+								*p_index = index; \
+							} \
+							return; \
+						} \
+						if (res != MUMA_SUCCESS && res != MUMA_NOT_FOUND) { \
+							if (p_index != MU_NULL_PTR) { \
+								*p_index = MU_NONE; \
+							} \
+							MU_SET_RESULT(result, res) \
+							return; \
+						} \
+						\
+						function_name_prefix##push(&res, s, find); \
+						if (res != MUMA_SUCCESS) { \
+							if (p_index != MU_NULL_PTR) { \
+								*p_index = MU_NONE; \
+							} \
+							MU_SET_RESULT(result, res) \
+							return; \
+						} \
+						\
+						if (p_index != MU_NULL_PTR) { \
+							*p_index = s->length-1; \
+						} \
+					}
 
-	#ifdef __cplusplus
-		}
-	#endif
-
-#endif /* MUMA_H */
-
-#ifdef MU_THREADSAFE
-
-	/* mum header commit acf8f90 */
-
-	#ifndef MUM_H
-		#define MUM_H
-		
-		#ifdef __cplusplus
-		extern "C" { // }
-		#endif
-
-		#define MUM_VERSION_MAJOR 1
-		#define MUM_VERSION_MINOR 0
-		#define MUM_VERSION_PATCH 0
-
-		/* Enums */
-
-			MU_ENUM(mumResult,
-				MUM_SUCCESS,
-
-				MUM_MUMA_FAILED_TO_ALLOCATE,
-				MUM_MUMA_INVALID_TYPE_SIZE,
-				MUM_MUMA_INVALID_INDEX,
-				MUM_MUMA_INVALID_SHIFT_AMOUNT,
-				MUM_MUMA_INVALID_COUNT,
-				MUM_MUMA_NOT_FOUND,
-
-				MUM_ALLOCATION_FAILED,
-
-				MUM_ALREADY_INITIALIZED,
-				MUM_ALREADY_TERMINATED,
-				MUM_NOT_YET_INITIALIZED,
-
-				MUM_CREATE_CALL_FAILED,
-				MUM_DESTROY_CALL_FAILED,
-				MUM_WAIT_CALL_FAILED,
-				MUM_LOCK_CALL_FAILED,
-				MUM_UNLOCK_CALL_FAILED,
-				MUM_GET_RETURN_VALUE_CALL_FAILED,
-
-				MUM_INVALID_ID,
-
-				MUM_THREAD_TIMED_OUT,
-				MUM_PREVIOUS_THREAD_CLOSED_BEFORE_LOCK
-			)
-
-		/* Macros */
-
-			#define muThread size_m
-			#define muMutex size_m
-			#define muSpinlock size_m
-
-			#ifdef MU_SPINLOCK
-				#define muLock muSpinlock
-				#define mu_lock_create mu_spinlock_create
-				#define mu_lock_destroy mu_spinlock_destroy
-				#define mu_lock_lock mu_spinlock_lock
-				#define mu_lock_unlock mu_spinlock_unlock
-			#else
-				#define muLock muMutex
-				#define mu_lock_create mu_mutex_create
-				#define mu_lock_destroy mu_mutex_destroy
-				#define mu_lock_lock mu_mutex_lock
-				#define mu_lock_unlock mu_mutex_unlock
+			#ifdef __cplusplus
+				}
 			#endif
 
-		/* Incomplete types */
+		#endif /* MUMA_H */
 
-			typedef struct mumContext mumContext;
+	/* muMultithreading version 1.0.0 header (only if thread safe) */
+	// CHANGES:
+	// * Removed muma header inclusion because this library already has it.
+	#ifdef MU_THREADSAFE
+		#if !defined(MU_CHECK_VERSION_MISMATCHING) && defined(MUM_H) && \
+			(MUM_VERSION_MAJOR != 1 || MUM_VERSION_MINOR != 0 || MUM_VERSION_PATCH != 0)
 
-		/* Global variables */
+			#pragma message("[MUS] muMultithreading's header has already been defined, but version doesn't match the version that this library is built for. This may lead to errors, warnings, or unexpected behavior. Define MU_CHECK_VERSION_MISMATCHING before this to turn off this message.")
 
-			MUDEF mumContext* mum_global_context;
-
-		/* Functions */
-
-			/* Names */
-
-				#ifdef MUM_NAMES
-					MUDEF const char* mum_result_get_name(mumResult result);
-				#endif
-
-			/* Initiation/Termination */
-
-				MUDEF void mum_init(mumResult* result);
-				MUDEF void mum_term(mumResult* result);
-
-			/* Thread */
-
-				MUDEF muThread mu_thread_create(mumResult* result, void (*start)(void* args), void* args);
-				MUDEF muThread mu_thread_destroy(mumResult* result, muThread thread);
-
-				MUDEF void mu_thread_exit(void* ret);
-				MUDEF void mu_thread_wait(mumResult* result, muThread thread);
-				MUDEF void* mu_thread_get_return_value(mumResult* result, muThread thread);
-
-			/* Mutex */
-
-				MUDEF muMutex mu_mutex_create(mumResult* result);
-				MUDEF muMutex mu_mutex_destroy(mumResult* result, muMutex mutex);
-
-				MUDEF void mu_mutex_lock(mumResult* result, muMutex mutex);
-				MUDEF void mu_mutex_unlock(mumResult* result, muMutex mutex);
-
-			/* Spinlock */
-
-				MUDEF muSpinlock mu_spinlock_create(mumResult* result);
-				MUDEF muSpinlock mu_spinlock_destroy(mumResult* result, muSpinlock spinlock);
-
-				MUDEF void mu_spinlock_lock(mumResult* result, muSpinlock spinlock);
-				MUDEF void mu_spinlock_unlock(mumResult* result, muSpinlock spinlock);
-
-		#ifdef __cplusplus
-		}
 		#endif
 
+		#ifndef MUM_H
+			#define MUM_H
+
+			#ifdef __cplusplus
+			extern "C" { // }
+			#endif
+
+			#define MUM_VERSION_MAJOR 1
+			#define MUM_VERSION_MINOR 0
+			#define MUM_VERSION_PATCH 0
+
+			/* Enums */
+
+				MU_ENUM(mumResult,
+					MUM_SUCCESS,
+
+					MUM_MUMA_SUCCESS,
+					MUM_MUMA_FAILED_TO_ALLOCATE,
+					MUM_MUMA_INVALID_INDEX,
+					MUM_MUMA_INVALID_SHIFT_AMOUNT,
+					MUM_MUMA_NOT_FOUND,
+
+					MUM_ALLOCATION_FAILED,
+
+					MUM_ALREADY_INITIALIZED,
+					MUM_ALREADY_TERMINATED,
+					MUM_NOT_YET_INITIALIZED,
+
+					MUM_CREATE_CALL_FAILED,
+					MUM_DESTROY_CALL_FAILED,
+					MUM_WAIT_CALL_FAILED,
+					MUM_LOCK_CALL_FAILED,
+					MUM_UNLOCK_CALL_FAILED,
+					MUM_GET_RETURN_VALUE_CALL_FAILED,
+
+					MUM_INVALID_ID,
+
+					MUM_THREAD_TIMED_OUT,
+					MUM_PREVIOUS_THREAD_CLOSED_BEFORE_LOCK
+				)
+
+			/* Macros */
+
+				#define muThread size_m
+				#define muMutex size_m
+				#define muSpinlock size_m
+
+				#ifdef MU_SPINLOCK
+					#define muLock muSpinlock
+					#define mu_lock_create mu_spinlock_create
+					#define mu_lock_destroy mu_spinlock_destroy
+					#define mu_lock_lock mu_spinlock_lock
+					#define mu_lock_unlock mu_spinlock_unlock
+				#else
+					#define muLock muMutex
+					#define mu_lock_create mu_mutex_create
+					#define mu_lock_destroy mu_mutex_destroy
+					#define mu_lock_lock mu_mutex_lock
+					#define mu_lock_unlock mu_mutex_unlock
+				#endif
+
+			/* Incomplete types */
+
+				typedef struct mumContext mumContext;
+
+			/* Global variables */
+
+				MUDEF mumContext* mum_global_context;
+
+			/* Functions */
+
+				/* Names */
+
+					#ifdef MUM_NAMES
+						MUDEF const char* mum_result_get_name(mumResult result);
+					#endif
+
+				/* Initiation/Termination */
+
+					MUDEF void mum_init(mumResult* result);
+					MUDEF void mum_term(mumResult* result);
+
+				/* Thread */
+
+					MUDEF muThread mu_thread_create(mumResult* result, void (*start)(void* args), void* args);
+					MUDEF muThread mu_thread_destroy(mumResult* result, muThread thread);
+
+					MUDEF void mu_thread_exit(void* ret);
+					MUDEF void mu_thread_wait(mumResult* result, muThread thread);
+					MUDEF void* mu_thread_get_return_value(mumResult* result, muThread thread);
+
+				/* Mutex */
+
+					MUDEF muMutex mu_mutex_create(mumResult* result);
+					MUDEF muMutex mu_mutex_destroy(mumResult* result, muMutex mutex);
+
+					MUDEF void mu_mutex_lock(mumResult* result, muMutex mutex);
+					MUDEF void mu_mutex_unlock(mumResult* result, muMutex mutex);
+
+				/* Spinlock */
+
+					MUDEF muSpinlock mu_spinlock_create(mumResult* result);
+					MUDEF muSpinlock mu_spinlock_destroy(mumResult* result, muSpinlock spinlock);
+
+					MUDEF void mu_spinlock_lock(mumResult* result, muSpinlock spinlock);
+					MUDEF void mu_spinlock_unlock(mumResult* result, muSpinlock spinlock);
+
+			#ifdef __cplusplus
+			}
+			#endif
+
+		#endif
 	#endif
-
-#endif /* MU_THREADSAFE */
-
-#ifndef MUS_H
-	#define MUS_H
 
 	#ifdef __cplusplus
 	extern "C" { // }
@@ -1235,12 +1254,11 @@ More explicit license information at the end of file.
 
 			MUS_INSUFFICIENT_DATA_SIZE,
 
+			MUS_MUMA_SUCCESS,
 			MUS_MUMA_FAILED_TO_ALLOCATE,
-			MUS_MUMA_INVALID_TYPE_SIZE,
 			MUS_MUMA_INVALID_INDEX,
 			MUS_MUMA_INVALID_SHIFT_AMOUNT,
-			MUS_MUMA_INVALID_COUNT,
-			MUS_MUMA_NOT_FOUND,
+			MUS_MUMA_NOT_FOUND
 		)
 
 		MU_ENUM(muCharacterEncoding,
@@ -1337,46 +1355,57 @@ More explicit license information at the end of file.
 
 #ifdef MUS_IMPLEMENTATION
 
-	/* muma implementation (commit 4683cd1) */
+	/* muMemoryAllocator version 1.0.0 implementation */
 
-	#ifndef MUMA_IMPLEMENTATION
+		#ifndef MUMA_IMPLEMENTATION
+			#define MUMA_IMPLEMENTATION
 
-		#define MUMA_IMPLEMENTATION
+			#ifdef MUMA_IMPLEMENTATION
 
-		#ifdef MUMA_IMPLEMENTATION
+				/* muUtility version 1.0.0 implementation */
 
-			#ifdef __cplusplus
-				extern "C" {
-			#endif
+					#ifndef MUU_IMPLEMENTATION
+						#define MUU_IMPLEMENTATION
 
-			#ifdef MUMA_NAMES
-				MUDEF const char* muma_result_get_name(mumaResult result) {
-					switch (result) {
-						default: return "MUMA_UNKNOWN"; break;
-						case MUMA_SUCCESS: return "MUMA_SUCCESS"; break;
-						case MUMA_FAILED_TO_ALLOCATE: return "MUMA_FAILED_TO_ALLOCATE"; break;
-						case MUMA_INVALID_TYPE_SIZE: return "MUMA_INVALID_TYPE_SIZE"; break;
-						case MUMA_INVALID_INDEX: return "MUMA_INVALID_INDEX"; break;
-						case MUMA_INVALID_SHIFT_AMOUNT: return "MUMA_INVALID_SHIFT_AMOUNT"; break;
-						case MUMA_INVALID_COUNT: return "MUMA_INVALID_COUNT"; break;
+						#ifdef MUU_IMPLEMENTATION
+				
+							// ...
+
+						#endif /* MUU_IMPLEMENTATION */
+					#endif
+
+				#ifdef __cplusplus
+					extern "C" {
+				#endif
+
+				#ifdef MUMA_NAMES
+					MUDEF const char* muma_result_get_name(mumaResult result) {
+						switch (result) {
+							default: return "MUMA_UNKNOWN"; break;
+							case MUMA_SUCCESS: return "MUMA_SUCCESS"; break;
+							case MUMA_FAILED_TO_ALLOCATE: return "MUMA_FAILED_TO_ALLOCATE"; break;
+							case MUMA_INVALID_INDEX: return "MUMA_INVALID_INDEX"; break;
+							case MUMA_INVALID_SHIFT_AMOUNT: return "MUMA_INVALID_SHIFT_AMOUNT"; break;
+							case MUMA_NOT_FOUND: return "MUMA_NOT_FOUND"; break;
+						}
 					}
-				}
-			#endif
+				#endif
 
-			#ifdef __cplusplus
-				}
-			#endif
+				#ifdef __cplusplus
+					}
+				#endif
 
-		#endif /* MUMA_IMPLEMENTATION */
+			#endif /* MUMA_IMPLEMENTATION */
+		#endif
 
-	#endif
+	/* muMultithreading version 1.0.0 implementation (only if thread safe) */
+	// CHANGES:
+	// * Removed muma implementation inclusion because this library already has it.
+	// * Added alt MU_LOCK definitions for non-thread safe code.
 
 	#ifdef MU_THREADSAFE
 
-		/* mum implementation commit acf8f90 */
-
 		#ifndef MUM_IMPLEMENTATION
-
 			#define MUM_IMPLEMENTATION
 
 			#ifdef MUM_IMPLEMENTATION
@@ -1394,11 +1423,10 @@ More explicit license information at the end of file.
 								switch (result) {
 									default: return "MUM_UNKNOWN"; break;
 									case MUM_SUCCESS: return "MUM_SUCCESS"; break;
+									case MUM_MUMA_SUCCESS: return "MUM_MUMA_SUCCESS"; break;
 									case MUM_MUMA_FAILED_TO_ALLOCATE: return "MUM_MUMA_FAILED_TO_ALLOCATE"; break;
-									case MUM_MUMA_INVALID_TYPE_SIZE: return "MUM_MUMA_INVALID_TYPE_SIZE"; break;
 									case MUM_MUMA_INVALID_INDEX: return "MUM_MUMA_INVALID_INDEX"; break;
 									case MUM_MUMA_INVALID_SHIFT_AMOUNT: return "MUM_MUMA_INVALID_SHIFT_AMOUNT"; break;
-									case MUM_MUMA_INVALID_COUNT: return "MUM_MUMA_INVALID_COUNT"; break;
 									case MUM_MUMA_NOT_FOUND: return "MUM_MUMA_NOT_FOUND"; break;
 									case MUM_ALLOCATION_FAILED: return "MUM_ALLOCATION_FAILED"; break;
 									case MUM_ALREADY_INITIALIZED: return "MUM_ALREADY_INITIALIZED"; break;
@@ -1421,12 +1449,10 @@ More explicit license information at the end of file.
 
 						mumResult muma_result_to_mum_result(mumaResult res) {
 							switch (res) {
-								default: case MUMA_SUCCESS: return MUM_SUCCESS; break;
+								default: case MUMA_SUCCESS: return MUM_MUMA_SUCCESS; break;
 								case MUMA_FAILED_TO_ALLOCATE: return MUM_MUMA_FAILED_TO_ALLOCATE; break;
-								case MUMA_INVALID_TYPE_SIZE: return MUM_MUMA_INVALID_TYPE_SIZE; break;
 								case MUMA_INVALID_INDEX: return MUM_MUMA_INVALID_INDEX; break;
 								case MUMA_INVALID_SHIFT_AMOUNT: return MUM_MUMA_INVALID_SHIFT_AMOUNT; break;
-								case MUMA_INVALID_COUNT: return MUM_MUMA_INVALID_COUNT; break;
 								case MUMA_NOT_FOUND: return MUM_MUMA_NOT_FOUND; break;
 							}
 						}
@@ -1453,7 +1479,7 @@ More explicit license information at the end of file.
 
 						#ifdef MU_THREADSAFE
 
-							#define MU_LOCK pthread_mutex_t
+							#define MU_LOCK pthread_mutex_t lock; muBool lock_active;
 
 							#define MU_LOCK_CREATE(lock, lock_active) \
 								if (pthread_mutex_init(&lock, 0) == 0) { \
@@ -1481,6 +1507,7 @@ More explicit license information at the end of file.
 
 						#else
 
+							#define MU_LOCK
 							#define MU_LOCK_CREATE(lock, active)
 							#define MU_LOCK_DESTROY(lock, active)
 							#define MU_LOCK_LOCK(lock, active)
@@ -1497,10 +1524,7 @@ More explicit license information at the end of file.
 								pthread_t handle;
 								void* ret;
 
-								#ifdef MU_THREADSAFE
-								muBool lock_active;
-								MU_LOCK lock;
-								#endif
+								MU_LOCK
 							};
 							typedef struct mu_unix_thread mu_unix_thread;
 
@@ -1512,10 +1536,7 @@ More explicit license information at the end of file.
 								muBool active;
 								pthread_mutex_t handle;
 
-								#ifdef MU_THREADSAFE
-								muBool lock_active;
-								MU_LOCK lock;
-								#endif
+								MU_LOCK
 							};
 							typedef struct mu_unix_mutex mu_unix_mutex;
 
@@ -1527,10 +1548,7 @@ More explicit license information at the end of file.
 								muBool active;
 								int locked;
 
-								#ifdef MU_THREADSAFE
-								muBool lock_active;
-								MU_LOCK lock;
-								#endif
+								MU_LOCK
 							};
 							typedef struct mu_unix_spinlock mu_unix_spinlock;
 
@@ -1810,7 +1828,7 @@ More explicit license information at the end of file.
 
 						#ifdef MU_THREADSAFE
 
-							#define MU_LOCK HANDLE
+							#define MU_LOCK HANDLE lock; muBool lock_active;
 
 							#define MU_LOCK_CREATE(lock, lock_active) \
 								lock = CreateMutex(0, MU_FALSE, 0); \
@@ -1839,6 +1857,7 @@ More explicit license information at the end of file.
 
 						#else
 
+							#define MU_LOCK
 							#define MU_LOCK_CREATE(lock, active)
 							#define MU_LOCK_DESTROY(lock, active)
 							#define MU_LOCK_LOCK(lock, active)
@@ -1854,10 +1873,7 @@ More explicit license information at the end of file.
 								muBool active;
 								HANDLE handle;
 
-								#ifdef MU_THREADSAFE
-								muBool lock_active;
-								MU_LOCK lock;
-								#endif
+								MU_LOCK
 							};
 							typedef struct mu_win32_thread mu_win32_thread;
 
@@ -1869,10 +1885,7 @@ More explicit license information at the end of file.
 								muBool active;
 								HANDLE handle;
 
-								#ifdef MU_THREADSAFE
-								muBool lock_active;
-								MU_LOCK lock;
-								#endif
+								MU_LOCK
 							};
 							typedef struct mu_win32_mutex mu_win32_mutex;
 
@@ -1884,10 +1897,7 @@ More explicit license information at the end of file.
 								muBool active;
 								LONG volatile locked;
 
-								#ifdef MU_THREADSAFE
-								muBool lock_active;
-								MU_LOCK lock;
-								#endif
+								MU_LOCK
 							};
 							typedef struct mu_win32_spinlock mu_win32_spinlock;
 
@@ -2169,20 +2179,18 @@ More explicit license information at the end of file.
 				}
 				#endif
 
-			#else
-
 			#endif /* MUM_IMPLEMENTATION */
-
 		#endif
 
 	#else
 
-		#define MU_LOCK_CREATE(lock, active)
-		#define MU_LOCK_DESTROY(lock, active)
-		#define MU_LOCK_LOCK(lock, active)
-		#define MU_LOCK_UNLOCK(lock, active)
+		#define MU_LOCK
+		#define MU_LOCK_CREATE(...)
+		#define MU_LOCK_DESTROY(...)
+		#define MU_LOCK_LOCK(...)
+		#define MU_LOCK_UNLOCK(...)
 
-	#endif /* MU_THREADSAFE */
+	#endif
 
 	#ifdef __cplusplus
 	extern "C" { // }
@@ -2192,12 +2200,10 @@ More explicit license information at the end of file.
 
 		musResult muma_result_to_mus_result(mumaResult res) {
 			switch (res) {
-				default: case MUMA_SUCCESS: return MUS_SUCCESS; break;
+				default: case MUMA_SUCCESS: return MUS_MUMA_SUCCESS; break;
 				case MUMA_FAILED_TO_ALLOCATE: return MUS_MUMA_FAILED_TO_ALLOCATE; break;
-				case MUMA_INVALID_TYPE_SIZE: return MUS_MUMA_INVALID_TYPE_SIZE; break;
 				case MUMA_INVALID_INDEX: return MUS_MUMA_INVALID_INDEX; break;
 				case MUMA_INVALID_SHIFT_AMOUNT: return MUS_MUMA_INVALID_SHIFT_AMOUNT; break;
-				case MUMA_INVALID_COUNT: return MUS_MUMA_INVALID_COUNT; break;
 				case MUMA_NOT_FOUND: return MUS_MUMA_NOT_FOUND; break;
 			}
 		}
@@ -2249,10 +2255,7 @@ More explicit license information at the end of file.
 				mus_byte_string bytes;
 				size_m code_point_length;
 
-				#ifdef MU_THREADSAFE
-					MU_LOCK lock;
-					muBool lock_active;
-				#endif
+				MU_LOCK
 			};
 			typedef struct mus_string mus_string;
 
