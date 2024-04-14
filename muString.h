@@ -1403,6 +1403,13 @@ expect '.' to be in there at SOME point.
 				MUDEF size_m mu_UTF8_get_raw_string_code_point_length(musResult* result, muByte* data, size_m data_size);
 				MUDEF size_m mu_UTF8_get_raw_string_code_point_offset(musResult* result, muByte* data, size_m data_size, size_m offset, size_m index);
 
+		/* Code point */
+
+			/* Uppercase/Lowercase */
+
+				MUDEF muCodePoint mu_code_point_lowercase(musResult* result, muCharacterEncoding encoding, muCodePoint code_point);
+				MUDEF muCodePoint mu_code_point_uppercase(musResult* result, muCharacterEncoding encoding, muCodePoint code_point);
+
 	#ifdef __cplusplus
 	}
 	#endif
@@ -3431,6 +3438,322 @@ expect '.' to be in there at SOME point.
 
 					MU_ASSERT(count_index == index, result, MUS_INVALID_OFFSET, return 0;)
 					return i;
+				}
+
+		/* Codepoint */
+
+			/* Uppercase/Lowercase */
+
+				// Last updated 16 September 2023, covers 0 -> 65533
+				// https://en.wikipedia.org/wiki/List_of_Unicode_characters
+				// https://www.ssec.wisc.edu/~tomw/java/unicode.html
+
+				MUDEF muCodePoint mu_code_point_lowercase(musResult* result, muCharacterEncoding encoding, muCodePoint code_point) {
+					if (encoding == MU_ASCII) {
+						MU_ASSERT(code_point <= 0x7F, result, MUS_INVALID_CHARACTER_ENCODING, return code_point;)
+						if (code_point >= 65 && code_point <= 90) {
+							return code_point + 32;
+						}
+						return code_point;
+					}
+
+					if (
+					// Latin alphabet
+						(code_point >= 65 && code_point <= 90) ||
+					// Latin-1 supplement
+						(code_point >= 192 && code_point <= 222 && code_point != 215) ||
+					// Greek and Coptic
+						(code_point >= 913 && code_point <= 939) ||
+					// Cyrillic
+						(code_point >= 0x0410 && code_point <= 0x042F) ||
+					// Halfwidth and fullwidth forms
+						(code_point >= 65313 && code_point <= 65338)
+					) {
+						return code_point + 32;
+					} else if (
+					// Latin extended-a
+						(
+							(code_point >= 256 && code_point <= 310 && code_point % 2 == 0) || 
+							(code_point >= 313 && code_point <= 327 && code_point % 2 != 0) ||
+							(code_point >= 330 && code_point <= 376 && code_point % 2 == 0) ||
+							(code_point >= 377 && code_point <= 381 && code_point % 2 != 0)
+						) ||
+					// Latin extended-b
+						(
+							(code_point >= 461 && code_point <= 475 && code_point % 2 != 0) ||
+							(code_point >= 478 && code_point <= 494 && code_point % 2 == 0) ||
+							(code_point >= 504 && code_point <= 542 && code_point % 2 == 0) ||
+							(code_point >= 546 && code_point <= 562 && code_point % 2 == 0) ||
+							(code_point >= 582 && code_point <= 590 && code_point % 2 == 0)
+						) ||
+					// Greek and Coptic
+						(
+							(code_point >= 984 && code_point <= 1006 && code_point % 2 == 0)
+						) ||
+					// Cyrillic
+						(
+							(code_point >= 0x0460 && code_point <= 0x0480 && code_point % 2 == 0) ||
+							(code_point >= 0x048A && code_point <= 0x04BE && code_point % 2 == 0) ||
+							(code_point >= 0x04C1 && code_point <= 0x04CD && code_point % 2 != 0) ||
+							(code_point >= 0x04D0 && code_point <= 0x04FE && code_point % 2 == 0) ||
+							// Cyrillic supplement
+							(code_point >= 0x0500 && code_point <= 0x052E && code_point % 2 == 0)
+						) ||
+					// Latin extended additional
+						(
+							(code_point >= 7680 && code_point <= 7828 && code_point % 2 == 0) ||
+							(code_point >= 7840 && code_point <= 7928 && code_point % 2 == 0)
+						)
+					) {
+						return code_point + 1;
+					} else if (
+					// Cyrillic
+						(
+							(code_point >= 0x0400 && code_point <= 0x040F)
+						)
+					) {
+						return code_point + 80;
+					} else if (
+					// Armenian
+						(
+							(code_point >= 0x0530 && code_point <= 0x0558)
+						) ||
+					// Georgian
+						(
+							(code_point >= 0x10A0 && code_point <= 0x10CF)
+						)
+					) {
+						return code_point + 48;
+					} else if (
+					// Greek extended
+						(
+							(code_point >= 7944 && code_point <= 7951) || (code_point >= 7960 && code_point <= 7965) || (code_point >= 7976 && code_point <= 7983) || (code_point >= 7992 && code_point <= 7999) ||
+							(code_point >= 8008 && code_point <= 8013) || (code_point >= 8025 && code_point <= 8031) || (code_point >= 8040 && code_point <= 8047) || (code_point >= 8072 && code_point <= 8079) ||
+							(code_point >= 8088 && code_point <= 8095) || (code_point >= 8104 && code_point <= 8111) || (code_point >= 8120 && code_point <= 8124)
+						)
+					) {
+						return code_point - 8;
+					} else if (
+					// Enclosed alphanumerics
+						(
+							(code_point >= 9398 && code_point <= 9423)
+						)
+					) {
+						return code_point + 26;
+					}
+					switch (code_point) {
+					default: break;
+					// Odd Latin extended-b / IPA extensions
+					case 386: case 388: case 391: case 395: case 401: case 408: case 416: case 418: case 420: case 423: case 428: case 431: 
+					case 435: case 437: case 440: case 444: case 453: case 456: case 459: case 498: case 500: case 571: case 577: return code_point+1; break;
+					case 384: return 579; break;
+					case 385: return 595; break;
+					case 390: return 596; break;
+					case 393: return 598; break;
+					case 394: return 599; break;
+					case 398: return 600; break;
+					case 399: return 601; break;
+					case 400: return 603; break;
+					case 403: return 608; break;
+					case 404: return 611; break;
+					case 406: return 617; break;
+					case 407: return 616; break;
+					case 412: return 623; break;
+					case 413: return 626; break;
+					case 425: return 643; break;
+					case 430: return 648; break;
+					case 433: return 650; break;
+					case 434: return 641; break;
+					case 439: return 658; break;
+					case 452: return 454; break;
+					case 455: return 457; break;
+					case 458: return 460; break;
+					case 497: return 499; break;
+					case 544: return 414; break;
+					case 573: return 410; break;
+					case 579: return 384; break;
+					case 580: return 649; break;
+					case 581: return 652; break;
+
+					// Odd greek and coptic
+					case 880: case 882: case 886: case 1015: case 1018: return code_point+1; break;
+					case 895: return 1011; break;
+					case 904: case 905: case 906: return code_point+37; break;
+					case 908: case 910: case 911: return code_point+64; break;
+					case 975: return 983; break;
+					case 1012: return 977; break;
+					case 1017: return 1010; break;
+					case 1021: case 1022: case 1023: return code_point-130; break;
+
+					// Odd greek extended
+					case 8136: case 8137: case 8138: case 8139: return code_point-86; break;
+					case 8140: return 8131; break;
+					case 8152: return 8144; break;
+					case 8153: return 8145; break;
+					case 8154: case 8155: return code_point-100; break;
+					case 8168: return 8160; break;
+					case 8169: return 8161; break;
+					case 8170: return 8058; break;
+					case 8171: return 8059; break;
+					case 8172: return 8165; break;
+					case 8184: case 8185: return code_point-128; break;
+					case 8187: return 8061; break;
+					}
+					return code_point;
+				}
+
+				MUDEF muCodePoint mu_code_point_uppercase(musResult* result, muCharacterEncoding encoding, muCodePoint code_point) {
+					if (encoding == MU_ASCII) {
+						MU_ASSERT(code_point <= 0x7F, result, MUS_INVALID_CHARACTER_ENCODING, return code_point;)
+						if (code_point >= 97 && code_point <= 122) {
+							return code_point - 32;
+						}
+						return code_point;
+					}
+
+					if (
+					// Latin alphabet
+						(code_point >= 97 && code_point <= 122) ||
+					// Latin-1 supplement
+						(code_point >= 224 && code_point <= 255 && code_point != 247) ||
+					// Greek and Coptic
+						(code_point >= 945 && code_point <= 971) ||
+					// Cyrillic
+						(code_point >= (0x0410 + 32) && code_point <= (0x042F + 32)) ||
+					// Halfwidth and fullwidth forms
+						(code_point >= (65313 + 32) && code_point <= (65338 + 32))
+					) {
+						return code_point - 32;
+					} else if (
+					// Latin extended-a
+						(
+							(code_point >= 257 && code_point <= 311 && code_point % 2 != 0) || 
+							(code_point >= 312 && code_point <= 328 && code_point % 2 == 0) ||
+							(code_point >= 329 && code_point <= 375 && code_point % 2 != 0) ||
+							(code_point >= 378 && code_point <= 382 && code_point % 2 == 0)
+						) ||
+					// Latin extended-b
+						(
+							(code_point >= 462 && code_point <= 476 && code_point % 2 == 0) ||
+							(code_point >= 479 && code_point <= 495 && code_point % 2 != 0) ||
+							(code_point >= 505 && code_point <= 543 && code_point % 2 != 0) ||
+							(code_point >= 547 && code_point <= 563 && code_point % 2 != 0) ||
+							(code_point >= 583 && code_point <= 591 && code_point % 2 != 0)
+						) ||
+					// Greek and Coptic
+						(
+							(code_point >= 985 && code_point <= 1007 && code_point % 2 != 0)
+						) ||
+					// Cyrillic
+						(
+							(code_point >= 0x0461 && code_point <= 0x0481 && code_point % 2 != 0) ||
+							(code_point >= 0x048B && code_point <= 0x04BF && code_point % 2 != 0) ||
+							(code_point >= 0x04C2 && code_point <= 0x04CE && code_point % 2 == 0) ||
+							(code_point >= 0x04D1 && code_point <= 0x04FF && code_point % 2 != 0) ||
+							// Cyrillic supplement
+							(code_point >= 0x0501 && code_point <= 0x052F && code_point % 2 != 0)
+						) ||
+					// Latin extended additional
+						(
+							(code_point >= 7681 && code_point <= 7829 && code_point % 2 != 0) ||
+							(code_point >= 7841 && code_point <= 7929 && code_point % 2 != 0)
+						)
+					) {
+						return code_point - 1;
+					} else if (
+					// Cyrillic
+						(
+							(code_point >= (0x0400+80) && code_point <= (0x040F+80))
+						)
+					) {
+						return code_point - 80;
+					} else if (
+					// Armenian
+						(
+							(code_point >= (0x0530+48) && code_point <= (0x0558+48))
+						) ||
+					// Georgian
+						(
+							(code_point >= (0x10A0+48) && code_point <= (0x10CF+48))
+						)
+					) {
+						return code_point - 48;
+					} else if (
+					// Greek extended
+						(
+							(code_point >= (7944-8) && code_point <= (7951-8)) || (code_point >= (7960-8) && code_point <= (7965-8)) || (code_point >= (7976-8) && code_point <= (7983-8)) || (code_point >= (7992-8) && code_point <= (7999-8)) ||
+							(code_point >= (8008-8) && code_point <= (8013-8)) || (code_point >= (8025-8) && code_point <= (8031-8)) || (code_point >= (8040-8) && code_point <= (8047-8)) || (code_point >= (8072-8) && code_point <= (8079-8)) ||
+							(code_point >= (8088-8) && code_point <= (8095-8)) || (code_point >= (8104-8) && code_point <= (8111-8)) || (code_point >= (8120-8) && code_point <= (8124-8))
+						)
+					) {
+						return code_point + 8;
+					} else if (
+					// Enclosed alphanumerics
+						(
+							(code_point >= (9398+26) && code_point <= (9423+26))
+						)
+					) {
+						return code_point - 26;
+					}
+					switch (code_point) {
+					default: break;
+					// Odd Latin extended-b / IPA extensions
+					case 387: case 389: case 392: case 396: case 402: case 409: case 417: case 419: case 421: case 424: case 429: case 432: 
+					case 436: case 438: case 441: case 445: case 453: case 456: case 459: case 498: case 501: case 572: case 578: return code_point-1; break;
+					case 579: return 384; break;
+					case 595: return 385; break;
+					case 596: return 390; break;
+					case 598: return 393; break;
+					case 599: return 394; break;
+					case 600: return 398; break;
+					case 601: return 399; break;
+					case 603: return 400; break;
+					case 608: return 403; break;
+					case 611: return 404; break;
+					case 617: return 406; break;
+					case 616: return 407; break;
+					case 623: return 412; break;
+					case 626: return 413; break;
+					case 643: return 425; break;
+					case 648: return 430; break;
+					case 650: return 433; break;
+					case 641: return 434; break;
+					case 658: return 439; break;
+					case 454: return 452; break;
+					case 457: return 455; break;
+					case 460: return 458; break;
+					case 499: return 497; break;
+					case 414: return 544; break;
+					case 410: return 573; break;
+					case 384: return 579; break;
+					case 649: return 580; break;
+					case 652: return 581; break;
+
+					// Odd Greek and Coptic
+					case 881: case 883: case 887: case 1016: case 1019: return code_point-1; break;
+					case 1011: return 895; break;
+					case 941: case 942: case 943: return code_point-37; break;
+					case 972: case 974: case 975: return code_point-64; break;
+					case 983: return 975; break;
+					case 977: return 1012; break;
+					case 1010: return 1017; break;
+					case 891: case 892: case 893: return code_point+130; break;
+
+					// Odd Greek extended
+					case 8050: case 8051: case 8052: case 8053: return code_point+86; break;
+					case 8131: return 8140; break;
+					case 8144: return 8152; break;
+					case 8145: return 8153; break;
+					case 8054: case 8055: return code_point+100; break;
+					case 8160: return 8168; break;
+					case 8161: return 8169; break;
+					case 8058: return 8170; break;
+					case 8059: return 8171; break;
+					case 8165: return 8172; break;
+					case 8056: case 8057: return code_point+128; break;
+					case 8061: return 8187; break;
+					}
+					return code_point;
 				}
 
 	#ifdef __cplusplus
