@@ -11,6 +11,11 @@ More explicit license information at the end of file.
 @MENTION Unicode surrogates are totally allowed.
 @MENTION math.h
 @MENTION Float/Double conversions for strings do very little rounding, if at all.
+@MENTION Raw string -> int/float/double expect data[0] to data[data_size-1] to ONLY be number data.
+This includes no spaces and only one '-' (and it must be at the beginning). Also, float/double
+expect '.' to be in there at SOME point.
+
+@TODO Hex/Binary string -> int.
 */
 
 #ifndef MUS_H
@@ -1276,10 +1281,13 @@ More explicit license information at the end of file.
 			MUS_INVALID_DATA_POINTER,
 			MUS_INVALID_OFFSET,
 			MUS_INVALID_ID,
+			MUS_INVALID_DATA,
 
 			MUS_INSUFFICIENT_DATA_SIZE,
 
 			MUS_NONMATCHING_CHARACTER_ENCODING,
+
+			MUS_OVERFLOW,
 
 			MUS_MUMA_SUCCESS,
 			MUS_MUMA_FAILED_TO_ALLOCATE,
@@ -1352,12 +1360,15 @@ More explicit license information at the end of file.
 
 				MUDEF size_m mu_raw_string_get_integer_conversion_size(musResult* result, muCharacterEncoding encoding, int64_m i);
 				MUDEF void mu_raw_string_convert_to_integer(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, int64_m i);
+				MUDEF int64_m mu_raw_string_get_integer(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size);
 
 				MUDEF size_m mu_raw_string_get_float_conversion_size(musResult* result, muCharacterEncoding encoding, float d, size_m decimal_places);
 				MUDEF void mu_raw_string_convert_to_float(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, float d, size_m decimal_places);
+				MUDEF float mu_raw_string_get_float(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size);
 
 				MUDEF size_m mu_raw_string_get_double_conversion_size(musResult* result, muCharacterEncoding encoding, double d, size_m decimal_places);
 				MUDEF void mu_raw_string_convert_to_double(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, double d, size_m decimal_places);
+				MUDEF double mu_raw_string_get_double(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size);
 
 		/* Cross-encoding functions */
 
@@ -2274,6 +2285,7 @@ More explicit license information at the end of file.
 						case MUS_INVALID_DATA_POINTER: return "MUS_INVALID_DATA_POINTER"; break;
 						case MUS_INVALID_OFFSET: return "MUS_INVALID_OFFSET"; break;
 						case MUS_INVALID_ID: return "MUS_INVALID_ID"; break;
+						case MUS_INVALID_DATA: return "MUS_INVALID_DATA"; break;
 						case MUS_INSUFFICIENT_DATA_SIZE: return "MUS_INSUFFICIENT_DATA_SIZE"; break;
 						case MUS_NONMATCHING_CHARACTER_ENCODING: return "MUS_NONMATCHING_CHARACTER_ENCODING"; break;
 						case MUS_MUMA_FAILED_TO_ALLOCATE: return "MUS_MUMA_FAILED_TO_ALLOCATE"; break;
@@ -2806,6 +2818,36 @@ More explicit license information at the end of file.
 					}
 				}
 
+				MUDEF int64_m mu_raw_string_get_integer(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size) {
+					MU_SET_RESULT(result, MUS_SUCCESS)
+					MU_ASSERT(data != MU_NULL_PTR, result, MUS_INVALID_DATA_POINTER, return 0;)
+					MU_ASSERT(data_size > 0, result, MUS_INVALID_DATA_SIZE, return 0;)
+					if (encoding) {}
+
+					size_m beg_i = 0;
+					if (data[0] == 45) {
+						beg_i = 1;
+					}
+
+					int64_m ret = 0;
+					for (size_m i = data_size; i != beg_i;) {
+						i -= 1;
+						int64_m bef_ret = ret;
+
+						MU_ASSERT(data[i] >= 48 && data[i] <= 57, result, MUS_INVALID_DATA, return 0;)
+						ret += mu_pow(10, (data_size-i)-1) * (data[i]-48);
+						if (ret < bef_ret) {
+							MU_SET_RESULT(result, MUS_OVERFLOW)
+							return 0;
+						}
+					}
+
+					if (beg_i == 1) {
+						return -ret;
+					}
+					return ret;
+				}
+
 				MUDEF size_m mu_raw_string_get_float_conversion_size(musResult* result, muCharacterEncoding encoding, float d, size_m decimal_places) {
 					MU_SET_RESULT(result, MUS_SUCCESS)
 					if (encoding) {}
@@ -2899,6 +2941,46 @@ More explicit license information at the end of file.
 					}
 				}
 
+				MUDEF float mu_raw_string_get_float(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size) {
+					MU_SET_RESULT(result, MUS_SUCCESS)
+					MU_ASSERT(data != MU_NULL_PTR, result, MUS_INVALID_DATA_POINTER, return 0.f;)
+					MU_ASSERT(data_size > 0, result, MUS_INVALID_DATA_SIZE, return 0.f;)
+					if (encoding) {}
+
+					size_m beg_i = 0;
+					if (data[0] == 45) {
+						beg_i = 1;
+					}
+
+					size_m decimal = MU_NONE;
+					for (size_m i = 0; i < data_size; i++) {
+						if (data[i] == 46) {
+							decimal = i;
+							break;
+						}
+					}
+					MU_ASSERT(decimal != MU_NONE, result, MUS_INVALID_DATA, return 0.f;)
+
+					float ret = 0.f;
+					for (size_m i = beg_i; i < data_size; i++) {
+						if (i == decimal) {
+							continue;
+						}
+						MU_ASSERT(data[i] >= 48 && data[i] <= 57, result, MUS_INVALID_DATA, return 0;)
+
+						if (i < decimal) {
+							ret += (float)(mu_pow(10.f, (decimal-i)-1) * (double)(data[i]-48));
+						} else {
+							ret += (float)(mu_pow(10.f, -(double)((i-decimal))) * (double)(data[i]-48));
+						}
+					}
+
+					if (beg_i == 1) {
+						return -ret;
+					}
+					return ret;
+				}
+
 				MUDEF size_m mu_raw_string_get_double_conversion_size(musResult* result, muCharacterEncoding encoding, double d, size_m decimal_places) {
 					MU_SET_RESULT(result, MUS_SUCCESS)
 					if (encoding) {}
@@ -2968,6 +3050,46 @@ More explicit license information at the end of file.
 
 						mus_write_double_int_only(decimal_places, d_decimals, &data[intsize+1]);
 					}
+				}
+
+				MUDEF double mu_raw_string_get_double(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size) {
+					MU_SET_RESULT(result, MUS_SUCCESS)
+					MU_ASSERT(data != MU_NULL_PTR, result, MUS_INVALID_DATA_POINTER, return 0.f;)
+					MU_ASSERT(data_size > 0, result, MUS_INVALID_DATA_SIZE, return 0.f;)
+					if (encoding) {}
+
+					size_m beg_i = 0;
+					if (data[0] == 45) {
+						beg_i = 1;
+					}
+
+					size_m decimal = MU_NONE;
+					for (size_m i = 0; i < data_size; i++) {
+						if (data[i] == 46) {
+							decimal = i;
+							break;
+						}
+					}
+					MU_ASSERT(decimal != MU_NONE, result, MUS_INVALID_DATA, return 0.f;)
+
+					double ret = 0.f;
+					for (size_m i = beg_i; i < data_size; i++) {
+						if (i == decimal) {
+							continue;
+						}
+						MU_ASSERT(data[i] >= 48 && data[i] <= 57, result, MUS_INVALID_DATA, return 0;)
+
+						if (i < decimal) {
+							ret += mu_pow(10.f, (decimal-i)-1) * (double)(data[i]-48);
+						} else {
+							ret += mu_pow(10.f, -(double)((i-decimal))) * (double)(data[i]-48);
+						}
+					}
+
+					if (beg_i == 1) {
+						return -ret;
+					}
+					return ret;
 				}
 
 		/* Cross-encoding functions */
