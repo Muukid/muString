@@ -9,6 +9,8 @@ More explicit license information at the end of file.
 @MENTION ASCII is with no extensions, only being valid from 0x00 to 0x7F. This is enforced.
 @MENTION Only functions that take in or return 'muString' require mus to be initiated.
 @MENTION Unicode surrogates are totally allowed.
+@MENTION math.h
+@MENTION Float/Double conversions for strings do very little rounding, if at all.
 */
 
 #ifndef MUS_H
@@ -1216,7 +1218,30 @@ More explicit license information at the end of file.
 
 	/* C standard library dependencies */
 
-		// ...
+		#if !defined(mu_log10) || \
+			!defined(mu_floor) || \
+			!defined(mu_pow)   || \
+			!defined(mu_fmod)
+
+			#include <math.h>
+
+			#ifndef mu_log10
+				#define mu_log10 log10
+			#endif
+
+			#ifndef mu_floor
+				#define mu_floor floor
+			#endif
+
+			#ifndef mu_pow
+				#define mu_pow pow
+			#endif
+
+			#ifndef mu_fmod
+				#define mu_fmod fmod
+			#endif
+
+		#endif
 
 	/* Incomplete types */
 
@@ -1253,6 +1278,8 @@ More explicit license information at the end of file.
 			MUS_INVALID_ID,
 
 			MUS_INSUFFICIENT_DATA_SIZE,
+
+			MUS_NONMATCHING_CHARACTER_ENCODING,
 
 			MUS_MUMA_SUCCESS,
 			MUS_MUMA_FAILED_TO_ALLOCATE,
@@ -1306,12 +1333,31 @@ More explicit license information at the end of file.
 				MUDEF muCodePoint mu_string_get_code_point(musResult* result, muString string, size_m offset);
 				MUDEF void mu_string_set_code_point(musResult* result, muString string, muCodePoint code_point, size_m offset);
 
+			/* Insert */
+
+				MUDEF void mu_string_insert_raw_string(musResult* result, muString string, muCharacterEncoding encoding, muByte* data, size_m data_size, size_m offset);
+
+				MUDEF void mu_string_insert_integer(musResult* result, muString string, int64_m i, size_m offset);
+				MUDEF void mu_string_insert_float(musResult* result, muString string, float d, size_m decimal_places, size_m offset);
+				MUDEF void mu_string_insert_double(musResult* result, muString string, double d, size_m decimal_places, size_m offset);
+
 		/* Raw string functions */
 
 			/* Conversion */
 
 				MUDEF size_m mu_raw_string_get_character_encoding_conversion_size(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, muCharacterEncoding desired_encoding);
 				MUDEF void mu_raw_string_convert_character_encoding(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, muCharacterEncoding output_encoding, muByte* output_data, size_m output_data_size);
+
+			/* Integer/Float/Double conversion */
+
+				MUDEF size_m mu_raw_string_get_integer_conversion_size(musResult* result, muCharacterEncoding encoding, int64_m i);
+				MUDEF void mu_raw_string_convert_to_integer(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, int64_m i);
+
+				MUDEF size_m mu_raw_string_get_float_conversion_size(musResult* result, muCharacterEncoding encoding, float d, size_m decimal_places);
+				MUDEF void mu_raw_string_convert_to_float(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, float d, size_m decimal_places);
+
+				MUDEF size_m mu_raw_string_get_double_conversion_size(musResult* result, muCharacterEncoding encoding, double d, size_m decimal_places);
+				MUDEF void mu_raw_string_convert_to_double(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, double d, size_m decimal_places);
 
 		/* Cross-encoding functions */
 
@@ -1320,7 +1366,6 @@ More explicit license information at the end of file.
 			MUDEF void mu_character_encoding_set_code_point(musResult* result, muCharacterEncoding encoding, muCodePoint code_point, muByte* data, size_m data_size);
 
 			MUDEF muBool mu_character_encoding_verify_raw_string(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size);
-			MUDEF size_m mu_character_encoding_get_raw_string_first_code_point_index(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size);
 			MUDEF size_m mu_character_encoding_get_raw_string_code_point_length(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size);
 			MUDEF size_m mu_character_encoding_get_raw_string_code_point_offset(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, size_m offset, size_m index);
 
@@ -2230,11 +2275,10 @@ More explicit license information at the end of file.
 						case MUS_INVALID_OFFSET: return "MUS_INVALID_OFFSET"; break;
 						case MUS_INVALID_ID: return "MUS_INVALID_ID"; break;
 						case MUS_INSUFFICIENT_DATA_SIZE: return "MUS_INSUFFICIENT_DATA_SIZE"; break;
+						case MUS_NONMATCHING_CHARACTER_ENCODING: return "MUS_NONMATCHING_CHARACTER_ENCODING"; break;
 						case MUS_MUMA_FAILED_TO_ALLOCATE: return "MUS_MUMA_FAILED_TO_ALLOCATE"; break;
-						case MUS_MUMA_INVALID_TYPE_SIZE: return "MUS_MUMA_INVALID_TYPE_SIZE"; break;
 						case MUS_MUMA_INVALID_INDEX: return "MUS_MUMA_INVALID_INDEX"; break;
 						case MUS_MUMA_INVALID_SHIFT_AMOUNT: return "MUS_MUMA_INVALID_SHIFT_AMOUNT"; break;
-						case MUS_MUMA_INVALID_COUNT: return "MUS_MUMA_INVALID_COUNT"; break;
 						case MUS_MUMA_NOT_FOUND: return "MUS_MUMA_NOT_FOUND"; break;
 					}
 				}
@@ -2286,7 +2330,7 @@ More explicit license information at the end of file.
 				MU_ASSERT(mus_global_context != MU_NULL_PTR, result, MUS_ALREADY_TERMINATED, return;)
 
 				for (size_m i = 0; i < MUS_GSTRINGS.length; i++) {
-					//mu_string_destroy(0, i);
+					mu_string_destroy(0, i);
 				}
 				mus_string_destroy(0, &MUS_GSTRINGS);
 
@@ -2526,6 +2570,121 @@ More explicit license information at the end of file.
 					MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
 				}
 
+			/* Insert */
+
+				MUDEF void mu_string_insert_raw_string(musResult* result, muString string, muCharacterEncoding encoding, muByte* data, size_m data_size, size_m offset) {
+					MU_ASSERT(data != MU_NULL_PTR, result, MUS_INVALID_DATA_POINTER, return;)
+					MU_ASSERT(data_size > 0, result, MUS_INVALID_DATA_SIZE, return;)
+					MU_SAFEFUNC(result, MUS_, mus_global_context, return;)
+					MU_HOLD(result, string, MUS_GSTRINGS, mus_global_context, MUS_, return;, mus_string_)
+
+					mumaResult muma_res = MUMA_SUCCESS;
+					musResult mus_res = MUS_SUCCESS;
+
+					MU_ASSERT(encoding == MUS_GSTRINGS.data[string].encoding, result, MUS_NONMATCHING_CHARACTER_ENCODING, MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					size_m first_offset = mu_character_encoding_get_raw_string_code_point_offset(&mus_res, encoding, data, data_size, 0, 0);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					MUS_GSTRINGS.data[string].bytes = mus_bstring_multiinsert(&muma_res, 
+						MUS_GSTRINGS.data[string].bytes, offset,
+						&data[first_offset], data_size-first_offset
+					);
+					MU_ASSERT(muma_res == MUMA_SUCCESS, result, muma_result_to_mus_result(muma_res), MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+				}
+
+				MUDEF void mu_string_insert_integer(musResult* result, muString string, int64_m i, size_m offset) {
+					MU_SAFEFUNC(result, MUS_, mus_global_context, return;)
+					MU_HOLD(result, string, MUS_GSTRINGS, mus_global_context, MUS_, return;, mus_string_)
+
+					mumaResult muma_res = MUMA_SUCCESS;
+					musResult mus_res = MUS_SUCCESS;
+
+					size_m int_size = mu_raw_string_get_integer_conversion_size(&mus_res, MUS_GSTRINGS.data[string].encoding, i);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					MUS_GSTRINGS.data[string].bytes = mus_bstring_rshift(&muma_res,
+						MUS_GSTRINGS.data[string].bytes, offset, int_size
+					);
+					MU_ASSERT(muma_res == MUMA_SUCCESS, result, muma_result_to_mus_result(muma_res), MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					mu_raw_string_convert_to_integer(&mus_res, 
+						MUS_GSTRINGS.data[string].encoding,
+						&MUS_GSTRINGS.data[string].bytes.data[offset],
+						MUS_GSTRINGS.data[string].bytes.length-offset,
+						i
+					);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res,
+						MUS_GSTRINGS.data[string].bytes = mus_bstring_lshift(0, MUS_GSTRINGS.data[string].bytes, offset+int_size, int_size);
+						MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+						return;
+					)
+
+					MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+				}
+
+				MUDEF void mu_string_insert_float(musResult* result, muString string, float d, size_m decimal_places, size_m offset) {
+					MU_SAFEFUNC(result, MUS_, mus_global_context, return;)
+					MU_HOLD(result, string, MUS_GSTRINGS, mus_global_context, MUS_, return;, mus_string_)
+
+					mumaResult muma_res = MUMA_SUCCESS;
+					musResult mus_res = MUS_SUCCESS;
+
+					size_m int_size = mu_raw_string_get_float_conversion_size(&mus_res, MUS_GSTRINGS.data[string].encoding, d, decimal_places);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					MUS_GSTRINGS.data[string].bytes = mus_bstring_rshift(&muma_res,
+						MUS_GSTRINGS.data[string].bytes, offset, int_size
+					);
+					MU_ASSERT(muma_res == MUMA_SUCCESS, result, muma_result_to_mus_result(muma_res), MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					mu_raw_string_convert_to_float(&mus_res, 
+						MUS_GSTRINGS.data[string].encoding,
+						&MUS_GSTRINGS.data[string].bytes.data[offset],
+						MUS_GSTRINGS.data[string].bytes.length-offset,
+						d, decimal_places
+					);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res,
+						MUS_GSTRINGS.data[string].bytes = mus_bstring_lshift(0, MUS_GSTRINGS.data[string].bytes, offset+int_size, int_size);
+						MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+						return;
+					)
+
+					MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+				}
+
+				MUDEF void mu_string_insert_double(musResult* result, muString string, double d, size_m decimal_places, size_m offset) {
+					MU_SAFEFUNC(result, MUS_, mus_global_context, return;)
+					MU_HOLD(result, string, MUS_GSTRINGS, mus_global_context, MUS_, return;, mus_string_)
+
+					mumaResult muma_res = MUMA_SUCCESS;
+					musResult mus_res = MUS_SUCCESS;
+
+					size_m int_size = mu_raw_string_get_double_conversion_size(&mus_res, MUS_GSTRINGS.data[string].encoding, d, decimal_places);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					MUS_GSTRINGS.data[string].bytes = mus_bstring_rshift(&muma_res,
+						MUS_GSTRINGS.data[string].bytes, offset, int_size
+					);
+					MU_ASSERT(muma_res == MUMA_SUCCESS, result, muma_result_to_mus_result(muma_res), MU_RELEASE(MUS_GSTRINGS, string, mus_string_) return;)
+
+					mu_raw_string_convert_to_double(&mus_res, 
+						MUS_GSTRINGS.data[string].encoding,
+						&MUS_GSTRINGS.data[string].bytes.data[offset],
+						MUS_GSTRINGS.data[string].bytes.length-offset,
+						d, decimal_places
+					);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res,
+						MUS_GSTRINGS.data[string].bytes = mus_bstring_lshift(0, MUS_GSTRINGS.data[string].bytes, offset+int_size, int_size);
+						MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+						return;
+					)
+
+					MU_RELEASE(MUS_GSTRINGS, string, mus_string_)
+				}
+
 		/* Raw string functions */
 
 			/* Conversion */
@@ -2587,6 +2746,227 @@ More explicit license information at the end of file.
 						mu_character_encoding_set_code_point(&res, output_encoding, input_cp, &output_data[output_i], output_data_size-output_i);
 						MU_ASSERT(res == MUS_SUCCESS, result, res, return;)
 						output_i += output_cp_size;
+					}
+				}
+
+			/* Integer/Float/Double conversion */
+
+				// For these functions, ASCII/UTF-8 is assumed. As of the time of writing this,
+				// these are the only encoding formats supported by muString, and their
+				// implementation for the characters concerned (0-9 and .) are the same, storing 1
+				// byte per character.
+
+				#define MUS_MAX_FLOAT_DECIMAL_POINTS 7
+				#define MUS_MAX_DOUBLE_DECIMAL_POINTS 16
+
+				MUDEF size_m mu_raw_string_get_integer_conversion_size(musResult* result, muCharacterEncoding encoding, int64_m i) {
+					MU_SET_RESULT(result, MUS_SUCCESS)
+					if (encoding) {}
+
+					uint8_m add = 0;
+					uint64_m ui;
+					if (i >= 0) {
+						ui = (uint64_m)i;
+					} else {
+						add = 1;
+						ui = (uint64_m)((int64_m)(-i));
+					}
+
+					// https://stackoverflow.com/a/14564888
+					uint8_m digits = ((uint8_m)(mu_log10((double)ui))) + 1;
+					return (size_m)(digits + add);
+				}
+
+				MUDEF void mu_raw_string_convert_to_integer(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, int64_m i) {
+					MU_SET_RESULT(result, MUS_SUCCESS)
+					MU_ASSERT(data != MU_NULL_PTR, result, MUS_INVALID_DATA_POINTER, return;)
+					MU_ASSERT(data_size > 0, result, MUS_INVALID_DATA_SIZE, return;)
+
+					musResult mus_res = MUS_SUCCESS;
+					size_m isize = mu_raw_string_get_integer_conversion_size(&mus_res, encoding, i);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, return;)
+					MU_ASSERT(data_size >= isize, result, MUS_INSUFFICIENT_DATA_SIZE, return;)
+
+					uint8_m neg = 0;
+					if (i < 0) {
+						neg = 1;
+					}
+
+					// https://stackoverflow.com/a/14564888
+					for (int8_m isizemod = isize-1; isizemod >= 0; isizemod -= 1, i /= 10) {
+						if (i < 0) {
+							data[isizemod] = ((-i) % 10) + 48;
+						} else {
+							data[isizemod] = (i % 10) + 48;
+						}
+					}
+
+					if (neg > 0) {
+						data[0] = 45;
+					}
+				}
+
+				MUDEF size_m mu_raw_string_get_float_conversion_size(musResult* result, muCharacterEncoding encoding, float d, size_m decimal_places) {
+					MU_SET_RESULT(result, MUS_SUCCESS)
+					if (encoding) {}
+					if (decimal_places > MUS_MAX_FLOAT_DECIMAL_POINTS) {
+						decimal_places = MUS_MAX_FLOAT_DECIMAL_POINTS;
+					}
+
+					uint8_m add = 0;
+					float ud;
+					if (d >= 0.f) {
+						ud = d;
+					} else {
+						add = 1;
+						ud = -d;
+					}
+
+					uint8_m digits = ((uint8_m)(mu_log10((double)ud))) + 1;
+					if (decimal_places == 0) {
+						return (size_m)(digits + add);
+					}
+					return ((size_m)(digits + add)) + decimal_places + 1;
+				}
+
+				void mus_write_double_int_only(size_m intsize, double floored_d, muByte* data) {
+					uint8_m neg = 0;
+					if (floored_d < 0.f) {
+						neg = 1;
+					}
+
+					size_m count = 0;
+
+					for (int64_m isizemod = intsize-1; isizemod >= 0; isizemod -= 1, count += 1) {
+						double i = floored_d / mu_pow(10.f, count);
+						if (i < 0) {
+							data[isizemod] = (muByte)mu_fmod(-i, 10.f) + 48;
+						} else {
+							data[isizemod] = (muByte)mu_fmod(i, 10.f) + 48;
+						}
+					}
+
+					if (neg > 0) {
+						data[0] = 45;
+					}
+				}
+
+				MUDEF void mu_raw_string_convert_to_float(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, float d, size_m decimal_places) {
+					MU_SET_RESULT(result, MUS_SUCCESS)
+					MU_ASSERT(data != MU_NULL_PTR, result, MUS_INVALID_DATA_POINTER, return;)
+					MU_ASSERT(data_size > 0, result, MUS_INVALID_DATA_SIZE, return;)
+					if (decimal_places > MUS_MAX_FLOAT_DECIMAL_POINTS) {
+						decimal_places = MUS_MAX_FLOAT_DECIMAL_POINTS;
+					}
+
+					musResult mus_res = MUS_SUCCESS;
+					size_m dsize = mu_raw_string_get_float_conversion_size(&mus_res, encoding, d, decimal_places);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, return;)
+					MU_ASSERT(data_size >= dsize, result, MUS_INSUFFICIENT_DATA_SIZE, return;)
+
+					size_m intsize = (dsize - decimal_places);
+					if (decimal_places != 0) {
+						intsize -= 1;
+					}
+
+					// Write int digits
+
+					double floored_d;
+					if (d >= 0.f) {
+						floored_d = mu_floor((double)d);
+					} else {
+						floored_d = -mu_floor((double)-d);
+					}
+
+					mus_write_double_int_only(intsize, floored_d, data);
+
+					// Write decimal digits
+
+					if (decimal_places > 0) {
+						data[intsize] = 46;
+
+						if (d < 0.f) { d = -d; }
+						if (floored_d < 0.f) { floored_d = -floored_d; }
+
+						double d_decimals = (double)(d)-floored_d;
+						if (d_decimals != 0.f) {
+							d_decimals = (((double)(d_decimals)) * (mu_pow(10.f, (double)(decimal_places))));
+						} else {
+							d_decimals = (((double)(floored_d)) * (mu_pow(10.f, (double)(decimal_places))));
+						}
+
+						mus_write_double_int_only(decimal_places, d_decimals, &data[intsize+1]);
+					}
+				}
+
+				MUDEF size_m mu_raw_string_get_double_conversion_size(musResult* result, muCharacterEncoding encoding, double d, size_m decimal_places) {
+					MU_SET_RESULT(result, MUS_SUCCESS)
+					if (encoding) {}
+					if (decimal_places > MUS_MAX_DOUBLE_DECIMAL_POINTS) {
+						decimal_places = MUS_MAX_DOUBLE_DECIMAL_POINTS;
+					}
+
+					uint8_m add = 0;
+					double ud;
+					if (d >= 0.f) {
+						ud = d;
+					} else {
+						add = 1;
+						ud = -d;
+					}
+
+					uint8_m digits = ((uint8_m)(mu_log10(ud))) + 1;
+					if (decimal_places == 0) {
+						return (size_m)(digits + add);
+					}
+					return ((size_m)(digits + add)) + decimal_places + 1;
+				}
+
+				MUDEF void mu_raw_string_convert_to_double(musResult* result, muCharacterEncoding encoding, muByte* data, size_m data_size, double d, size_m decimal_places) {
+					MU_SET_RESULT(result, MUS_SUCCESS)
+					MU_ASSERT(data != MU_NULL_PTR, result, MUS_INVALID_DATA_POINTER, return;)
+					MU_ASSERT(data_size > 0, result, MUS_INVALID_DATA_SIZE, return;)
+					if (decimal_places > MUS_MAX_DOUBLE_DECIMAL_POINTS) {
+						decimal_places = MUS_MAX_DOUBLE_DECIMAL_POINTS;
+					}
+
+					musResult mus_res = MUS_SUCCESS;
+					size_m dsize = mu_raw_string_get_double_conversion_size(&mus_res, encoding, d, decimal_places);
+					MU_ASSERT(mus_res == MUS_SUCCESS, result, mus_res, return;)
+					MU_ASSERT(data_size >= dsize, result, MUS_INSUFFICIENT_DATA_SIZE, return;)
+
+					size_m intsize = (dsize - decimal_places);
+					if (decimal_places != 0) {
+						intsize -= 1;
+					}
+
+					// Write int digits
+
+					double floored_d;
+					if (d >= 0.f) {
+						floored_d = mu_floor((double)d);
+					} else {
+						floored_d = -mu_floor((double)-d);
+					}
+
+					mus_write_double_int_only(intsize, floored_d, data);
+
+					// Write decimal digits
+
+					if (decimal_places > 0) {
+						data[intsize] = 46;
+
+						if (d < 0.f) { d = -d; }
+						if (floored_d < 0.f) { floored_d = -floored_d; }
+
+						double d_decimals = (double)(d)-floored_d;
+						if (d_decimals != 0.f) {
+							d_decimals = (((double)(d_decimals)) * (mu_pow(10.f, (double)(decimal_places))));
+						} else {
+							d_decimals = (((double)(floored_d)) * (mu_pow(10.f, (double)(decimal_places))));
+						}
+
+						mus_write_double_int_only(decimal_places, d_decimals, &data[intsize+1]);
 					}
 				}
 
